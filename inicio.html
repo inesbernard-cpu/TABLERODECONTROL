@@ -295,6 +295,86 @@
     .eyebrow-free-title{ font-size:26px; }
     .page{ padding:48px 18px 32px; }
   }
+  /* ===== Widget de Vencimientos ===== */
+  #vtoWidget{
+    position:fixed; right:20px; bottom:20px; z-index:500;
+    font-family:'Inter',sans-serif;
+  }
+
+  /* ===== Widget de Ayuda / Manual (PDF) ===== */
+  #helpWidget{
+    position:fixed; left:20px; bottom:20px; z-index:500;
+    font-family:'Inter',sans-serif;
+  }
+  #helpTile{
+    display:flex; align-items:center; justify-content:center;
+    width:52px; height:52px; border-radius:100%;
+    background:#232D42; color:#fff; border:none; cursor:pointer;
+    box-shadow:0 6px 20px rgba(35,45,66,0.28); text-decoration:none;
+  }
+  #helpTile:hover{ background:#1A2233; box-shadow:0 8px 26px rgba(35,45,66,0.36); }
+  #helpTile .vto-qmark{ display:block; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:26px; line-height:1; color:#fff; }
+  #helpTooltip{
+    position:absolute; left:60px; bottom:12px; white-space:nowrap;
+    background:#232D42; color:#fff; font-size:11.5px; font-weight:600;
+    padding:7px 12px; border-radius:8px; box-shadow:0 4px 14px rgba(35,45,66,0.28);
+    opacity:0; pointer-events:none; transform:translateX(-6px);
+    transition:opacity 0.15s ease, transform 0.15s ease;
+  }
+  #helpWidget:hover #helpTooltip{ opacity:1; transform:translateX(0); }
+  #vtoTile{
+    position:relative; display:flex; flex-direction:column; align-items:center;
+    width:76px; background:#fff; border:none; cursor:pointer; padding:0;
+    border-radius:14px; box-shadow:0 6px 20px rgba(35,45,66,0.24); overflow:hidden;
+    font-family:inherit;
+  }
+  #vtoTile:hover{ box-shadow:0 8px 26px rgba(35,45,66,0.32); }
+  .vto-tile-month{
+    width:100%; background:#C1443C; color:#fff; font-size:10px; font-weight:700;
+    letter-spacing:0.06em; text-align:center; padding:4px 0; text-transform:uppercase;
+  }
+  .vto-tile-day{
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:30px; line-height:1.15;
+    color:#232D42; padding:4px 0 2px;
+  }
+  .vto-tile-label{
+    width:100%; background:#F2F0EA; color:#232D42; font-size:9px; font-weight:700;
+    letter-spacing:0.04em; text-align:center; padding:5px 0; text-transform:uppercase;
+    border-top:1px solid rgba(35,45,66,0.08);
+  }
+  #vtoTile .vto-badge{
+    position:absolute; top:5px; right:5px; z-index:2;
+    background:#FF3B30; color:#fff; font-size:10px; font-weight:800;
+    min-width:17px; height:17px; border-radius:100px; text-align:center; line-height:17px;
+    border:2px solid #fff; box-shadow:0 2px 8px rgba(255,59,48,0.55);
+  }
+  #vtoPanel{
+    display:none; position:absolute; right:0; bottom:88px;
+    width:340px; max-height:min(480px, 70vh); background:#fff;
+    border:1px solid rgba(35,45,66,0.12); border-radius:14px;
+    box-shadow:0 12px 40px rgba(35,45,66,0.22);
+    overflow:hidden; flex-direction:column;
+  }
+  #vtoPanel.open{ display:flex; }
+  .vto-head{ padding:14px 16px 10px; border-bottom:1px solid rgba(35,45,66,0.08); }
+  .vto-head-row{ display:flex; justify-content:space-between; align-items:center; }
+  .vto-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13.5px; color:#232D42; }
+  .vto-close{ background:none; border:0; color:#8A93A6; cursor:pointer; font-size:16px; line-height:1; padding:2px; }
+  .vto-sub{ font-size:11px; color:#8A93A6; margin-top:3px; }
+  .vto-list{ overflow-y:auto; flex:1; padding:6px 0; }
+  .vto-item{ display:flex; gap:10px; padding:9px 16px; border-bottom:1px solid rgba(35,45,66,0.05); }
+  .vto-item.is-past{ opacity:0.42; }
+  .vto-item.is-today{ background:#FFF3CD; }
+  .vto-date{
+    flex-shrink:0; width:38px; text-align:center; font-family:'Space Grotesk',sans-serif;
+    font-weight:700; font-size:14px; color:#232D42; line-height:1.1; padding-top:1px;
+  }
+  .vto-date small{ display:block; font-size:9px; font-weight:600; color:#8A93A6; text-transform:uppercase; }
+  .vto-body{ flex:1; min-width:0; }
+  .vto-concepto{ font-size:12px; color:#232D42; line-height:1.35; }
+  .vto-entidad{ font-size:10.5px; color:#8A93A6; margin-top:2px; }
+  .vto-aprox{ font-size:9.5px; color:#B45309; font-weight:600; }
+  .vto-foot{ padding:9px 16px; border-top:1px solid rgba(35,45,66,0.08); font-size:10px; color:#9CA3AF; }
 </style>
 </head>
 <body>
@@ -525,6 +605,80 @@
       });
     });
   });
+</script>
+<div id="helpWidget">
+  <a id="helpTile" href="manual.pdf" target="_blank" rel="noopener noreferrer" title="Manual del tablero (PDF)">
+    <span class="vto-qmark">?</span>
+  </a>
+  <div id="helpTooltip">Manual del tablero (PDF)</div>
+</div>
+
+<div id="vtoWidget">
+  <div id="vtoPanel">
+    <div class="vto-head">
+      <div class="vto-head-row">
+        <div class="vto-title">Vencimientos — <span id="vtoPeriodo"></span></div>
+        <button class="vto-close" id="vtoClose">✕</button>
+      </div>
+      <div class="vto-sub" id="vtoSub"></div>
+    </div>
+    <div class="vto-list" id="vtoList"></div>
+    <div class="vto-foot">Actualización: mensual</div>
+  </div>
+  <button id="vtoTile">
+    <span class="vto-badge" id="vtoBadge">0</span>
+    <span class="vto-tile-month" id="vtoTileMonth">SEP</span>
+    <span class="vto-tile-day" id="vtoTileDay">24</span>
+    <span class="vto-tile-label">Vencimientos</span>
+  </button>
+</div>
+
+<script>
+(function(){
+  const VTO_DATA = {"periodo":"SEPTIEMBRE 2026","fecha_confeccion":"2026-08-25","vencimientos":[{"fecha":"2026-09-01","concepto":"Personal - Internet + Líneas fijas","entidad":"El Surtidor","aprox":false,"monto":null},{"fecha":"2026-09-01","concepto":"Personal (línea fija)","entidad":"La Estación","aprox":false,"monto":null},{"fecha":"2026-09-02","concepto":"Aguas de Fsa. (3 direcciones)","entidad":"El Surtidor","aprox":false,"monto":null},{"fecha":"2026-09-02","concepto":"Personal - Flow + Internet / Pack fútbol (3 líneas)","entidad":"El Surtidor","aprox":false,"monto":null},{"fecha":"2026-09-02","concepto":"Aguas - FC \"B\" (V. Carmen)","entidad":"Marcela Sanabria (personal)","aprox":false,"monto":null},{"fecha":"2026-09-02","concepto":"Personal - Flow + Internet (Libertad/Jujuy)","entidad":"Marcela Sanabria (personal)","aprox":false,"monto":null},{"fecha":"2026-09-02","concepto":"Aguas de Fsa. (2 direcciones)","entidad":"La Estación","aprox":false,"monto":null},{"fecha":"2026-09-02","concepto":"Personal - Internet / Flow + Packs (2 líneas)","entidad":"La Estación","aprox":false,"monto":null},{"fecha":"2026-09-02","concepto":"Aguas de Fsa. (Mz 3, V. Carmen)","entidad":"Marcelo Ferrari (personal)","aprox":false,"monto":null},{"fecha":"2026-09-03","concepto":"Aguas de Fsa. (4 direcciones)","entidad":"El Surtidor","aprox":false,"monto":null},{"fecha":"2026-09-03","concepto":"Telecom - Internet Corp. + Líneas fijas","entidad":"La Estación","aprox":false,"monto":null},{"fecha":"2026-09-03","concepto":"Personal - Internet Corporativo","entidad":"La Estación","aprox":false,"monto":null},{"fecha":"2026-09-04","concepto":"Berkley Seguros - Ind. y Com. (Ruta)","entidad":"El Surtidor","aprox":false,"monto":null},{"fecha":"2026-09-04","concepto":"REFSA (Libertad 769)","entidad":"El Surtidor","aprox":false,"monto":null},{"fecha":"2026-09-04","concepto":"REFSA (Salta 161 D10A)","entidad":"Marcela Sanabria (personal)","aprox":false,"monto":null},{"fecha":"2026-09-04","concepto":"REFSA (Salta 161 D10B)","entidad":"La Estación","aprox":false,"monto":null},{"fecha":"2026-09-05","concepto":"Municipalidad - Plan de Facilidades Cuota 8/18 ($134.061)","entidad":"El Surtidor","aprox":false,"monto":134061.42},{"fecha":"2026-09-05","concepto":"Municipalidad - Plan de Facilidades Cuota 8/18 ($620.136)","entidad":"La Estación","aprox":false,"monto":620135.97},{"fecha":"2026-09-07","concepto":"REFSA (3 direcciones)","entidad":"El Surtidor","aprox":false,"monto":null},{"fecha":"2026-09-07","concepto":"REFSA","entidad":"La Estación","aprox":false,"monto":null},{"fecha":"2026-09-07","concepto":"Autónomos","entidad":"Diego Ferrari","aprox":false,"monto":null},{"fecha":"2026-09-08","concepto":"Autónomos","entidad":"Amelio Ferrari","aprox":false,"monto":null},{"fecha":"2026-09-08","concepto":"Autónomos","entidad":"Marcelo Ferrari","aprox":false,"monto":null},{"fecha":"2026-09-08","concepto":"Autónomos","entidad":"Marcela Sanabria","aprox":false,"monto":null},{"fecha":"2026-09-09","concepto":"Claro AMX Arg.","entidad":"La Estación","aprox":true,"monto":null},{"fecha":"2026-09-09","concepto":"SICORE 2ª quincena 08/2026 + DJ (F.744)","entidad":"El Surtidor, La Estación y Fran S.A.","aprox":false,"monto":null},{"fecha":"2026-09-09","concepto":"F. 931 - Seguridad Social","entidad":"El Surtidor, La Estación y Fran S.A.","aprox":false,"monto":null},{"fecha":"2026-09-10","concepto":"AADI CAPIF","entidad":"El Surtidor","aprox":true,"monto":null},{"fecha":"2026-09-10","concepto":"Boca Roja (Ruta 11 Km 1164)","entidad":"El Surtidor","aprox":true,"monto":null},{"fecha":"2026-09-10","concepto":"Sancor Seguros - Flota","entidad":"La Estación","aprox":true,"monto":null},{"fecha":"2026-09-10","concepto":"AADI CAPIF","entidad":"La Estación","aprox":true,"monto":null},{"fecha":"2026-09-10","concepto":"Cuota Sindical - Camioneros","entidad":"El Surtidor y La Estación","aprox":true,"monto":null},{"fecha":"2026-09-10","concepto":"Servicio Doméstico","entidad":"Diego Ferrari y Marcela Sanabria","aprox":false,"monto":null},{"fecha":"2026-09-10","concepto":"Cuota Sindical - UTHGRA","entidad":"El Surtidor","aprox":true,"monto":null},{"fecha":"2026-09-11","concepto":"Cuota Sindical - SMATA","entidad":"Fran S.A.","aprox":true,"monto":null},{"fecha":"2026-09-12","concepto":"Berkley Seguros - Ind. y Com. (Rotonda)","entidad":"El Surtidor","aprox":false,"monto":null},{"fecha":"2026-09-15","concepto":"REFSA (Galpón)","entidad":"La Estación","aprox":false,"monto":null},{"fecha":"2026-09-15","concepto":"Sancor Seguros - Camión (AG267BQ)","entidad":"La Estación","aprox":true,"monto":null},{"fecha":"2026-09-15","concepto":"REFSA (2 direcciones, V. Carmen)","entidad":"Marcelo Ferrari (personal)","aprox":false,"monto":null},{"fecha":"2026-09-15","concepto":"Cuota Sindical - EESS","entidad":"El Surtidor, La Estación y Fran S.A.","aprox":true,"monto":null},{"fecha":"2026-09-15","concepto":"I.P.S.","entidad":"El Surtidor, La Estación y Fran S.A.","aprox":false,"monto":null},{"fecha":"2026-09-18","concepto":"Préstamo Prendario UVA (Bco. Santander) Cuota 7/12 ($13.503.177)","entidad":"El Surtidor","aprox":true,"monto":13503177.41},{"fecha":"2026-09-18","concepto":"I.V.A. + Libro I.V.A. Digital","entidad":"El Surtidor","aprox":false,"monto":null},{"fecha":"2026-09-18","concepto":"Municipalidad - Contrib. Com. e Ind.","entidad":"El Surtidor","aprox":true,"monto":null},{"fecha":"2026-09-19","concepto":"La Caja Seguros - Auto Hilux (Sr. Ferrari, M.)","entidad":"El Surtidor","aprox":true,"monto":null},{"fecha":"2026-09-19","concepto":"Sancor Seguros - Camión (Sra. Sanabria, M.)","entidad":"El Surtidor","aprox":true,"monto":null},{"fecha":"2026-09-21","concepto":"Monotributo","entidad":"Amelio Ferrari y Marcela Sanabria","aprox":false,"monto":null},{"fecha":"2026-09-21","concepto":"I.I.B.B. (ATP Formosa)","entidad":"El Surtidor, La Estación, Fran S.A. y Marcela Sanabria","aprox":false,"monto":null},{"fecha":"2026-09-21","concepto":"I.V.A. + Libro I.V.A. Digital","entidad":"La Estación y Fran S.A.","aprox":false,"monto":null},{"fecha":"2026-09-21","concepto":"SICORE - Retenciones 1ª quinc. 09/2026","entidad":"El Surtidor, La Estación y Fran S.A.","aprox":false,"monto":null},{"fecha":"2026-09-22","concepto":"Municipalidad - Contrib. Com. e Ind.","entidad":"La Estación y Fran S.A.","aprox":true,"monto":null},{"fecha":"2026-09-24","concepto":"Berkley Seguros - Ind. y Com. (Centro)","entidad":"El Surtidor","aprox":false,"monto":null},{"fecha":"2026-09-24","concepto":"Berkley Seguros - Ind. y Com.","entidad":"La Estación","aprox":false,"monto":null},{"fecha":"2026-09-28","concepto":"Sancor Seguros - Camión Scania (AH222JZ)","entidad":"La Estación","aprox":true,"monto":null}]}
+;
+  const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+  function fmtFecha(iso){
+    const [y,m,d] = iso.split('-');
+    return { dia: d, mes: MESES[parseInt(m,10)-1] };
+  }
+
+  const hoyStr = new Date().toISOString().slice(0,10);
+  const items = VTO_DATA.vencimientos.slice().sort((a,b)=> a.fecha.localeCompare(b.fecha));
+  const pendientes = items.filter(v => v.fecha >= hoyStr).length;
+
+  const hoyFmt = fmtFecha(hoyStr);
+  document.getElementById('vtoTileDay').textContent = hoyFmt.dia;
+  document.getElementById('vtoTileMonth').textContent = hoyFmt.mes;
+  document.getElementById('vtoBadge').textContent = pendientes;
+  document.getElementById('vtoBadge').style.display = pendientes > 0 ? 'block' : 'none';
+  document.getElementById('vtoPeriodo').textContent = VTO_DATA.periodo;
+  const fc = VTO_DATA.fecha_confeccion;
+  document.getElementById('vtoSub').textContent = `${items.length} vencimientos cargados · planilla del ${fc.split('-').reverse().join('/')}`;
+
+  document.getElementById('vtoList').innerHTML = items.map(v => {
+    const {dia, mes} = fmtFecha(v.fecha);
+    const isPast = v.fecha < hoyStr;
+    const isToday = v.fecha === hoyStr;
+    const montoTxt = v.monto ? ` <strong>$${Math.round(v.monto).toLocaleString('es-AR')}</strong>` : '';
+    return `<div class="vto-item ${isPast?'is-past':''} ${isToday?'is-today':''}">
+      <div class="vto-date">${dia}<small>${mes}</small></div>
+      <div class="vto-body">
+        <div class="vto-concepto">${v.concepto}${montoTxt}${v.aprox?' <span class="vto-aprox">(aprox.)</span>':''}</div>
+        <div class="vto-entidad">${v.entidad}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const tile = document.getElementById('vtoTile');
+  const panel = document.getElementById('vtoPanel');
+  tile.addEventListener('click', ()=> panel.classList.toggle('open'));
+  document.getElementById('vtoClose').addEventListener('click', ()=> panel.classList.remove('open'));
+  document.addEventListener('click', (e)=>{
+    if (!document.getElementById('vtoWidget').contains(e.target)) panel.classList.remove('open');
+  });
+})();
 </script>
 </body>
 </html>
