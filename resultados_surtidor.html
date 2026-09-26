@@ -317,6 +317,38 @@
     padding:3px 7px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   }
   .filter-chip button:hover{ background:var(--alert); }
+  /* ===== Widget de Reportes Varios ===== */
+  #repWidget{ position:relative; z-index:500; font-family:'Inter',sans-serif; flex-shrink:0; }
+  #repPill{
+    display:flex; align-items:center; gap:8px;
+    background:#232D42; color:#fff; border:none; cursor:pointer;
+    padding:11px 16px; border-radius:100px; box-shadow:0 4px 16px rgba(35,45,66,0.28);
+    font-size:12.5px; font-weight:600; font-family:inherit;
+  }
+  #repPill:hover{ background:#1A2233; }
+  #repPanel{
+    display:none; position:absolute; right:0; top:100%; margin-top:10px;
+    width:300px; max-height:min(400px, 65vh); background:#fff;
+    border:1px solid rgba(35,45,66,0.12); border-radius:14px;
+    box-shadow:0 12px 40px rgba(35,45,66,0.22);
+    overflow:hidden; flex-direction:column;
+  }
+  #repPanel.open{ display:flex; }
+  .rep-head{ padding:14px 16px 10px; border-bottom:1px solid rgba(35,45,66,0.08); }
+  .rep-head-row{ display:flex; justify-content:space-between; align-items:center; }
+  .rep-title{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13.5px; color:#232D42; }
+  .rep-close{ background:none; border:0; color:#8A93A6; cursor:pointer; font-size:16px; line-height:1; padding:2px; }
+  .rep-sub{ font-size:11px; color:#8A93A6; margin-top:3px; }
+  .rep-list{ overflow-y:auto; flex:1; padding:6px 0; }
+  .rep-item{
+    display:flex; align-items:center; gap:10px; padding:10px 16px;
+    border-bottom:1px solid rgba(35,45,66,0.05); text-decoration:none; color:inherit;
+  }
+  .rep-item:hover{ background:#F7F7FA; }
+  .rep-icon{ flex-shrink:0; width:30px; height:30px; border-radius:8px; background:#F3DEDB; color:#8F221A; display:flex; align-items:center; justify-content:center; }
+  .rep-body{ flex:1; min-width:0; }
+  .rep-nombre{ font-size:12px; color:#232D42; font-weight:600; line-height:1.3; }
+  .rep-fecha{ font-size:10.5px; color:#8A93A6; margin-top:1px; }
 </style>
 </head>
 <body>
@@ -381,6 +413,22 @@
     <button class="reset-all" id="resetAllBtn" title="Restablecer todos los filtros">Quitar todos los filtros</button>
     <div class="spacer"></div>
     <div class="legend-note" id="filterNote">Mostrando el consolidado de las 3 sucursales.</div>
+    <div id="repWidget">
+      <button id="repPill">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Reportes varios
+      </button>
+      <div id="repPanel">
+        <div class="rep-head">
+          <div class="rep-head-row">
+            <div class="rep-title">Reportes varios</div>
+            <button class="rep-close" id="repClose">✕</button>
+          </div>
+          <div class="rep-sub">Informes en PDF, adicionales al tablero</div>
+        </div>
+        <div class="rep-list" id="repList"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1898,6 +1946,35 @@ render();
 
 })();
 
+</script>
+<script>
+(function(){
+  // Para sumar un reporte nuevo: agregar un objeto más a este arreglo y subir el PDF junto con este archivo.
+  const REPORTES = [
+    { nombre: 'Auditoría de Consumo Interno — El Surtidor S.A.', archivo: 'El_Surtidor_Internal_Consumption_Audit.pdf', fecha: 'Julio 2026' },
+    { nombre: 'Gastos Atípicos y Conciliación de Consumo Interno — Enero 2026', archivo: 'informe-gastos-atipicos-enero-2026.pdf', fecha: 'Julio 2026' },
+  ];
+
+  document.getElementById('repList').innerHTML = REPORTES.map(r => `
+    <a class="rep-item" href="${r.archivo}" target="_blank" rel="noopener noreferrer">
+      <div class="rep-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <div class="rep-body">
+        <div class="rep-nombre">${r.nombre}</div>
+        <div class="rep-fecha">${r.fecha}</div>
+      </div>
+    </a>
+  `).join('');
+
+  const pill = document.getElementById('repPill');
+  const panel = document.getElementById('repPanel');
+  pill.addEventListener('click', ()=> panel.classList.toggle('open'));
+  document.getElementById('repClose').addEventListener('click', ()=> panel.classList.remove('open'));
+  document.addEventListener('click', (e)=>{
+    if (!document.getElementById('repWidget').contains(e.target)) panel.classList.remove('open');
+  });
+})();
 </script>
 </body>
 </html>
