@@ -1839,8 +1839,9 @@ function renderCcChip(){
 window.__clearCC = () => { selectedCC = null; render(); };
 
 function renderSucursalTrend(months){
-  const METRIC_LABEL = { ventas:'Ventas', util_bruta:'Utilidad bruta', util_neta:'Utilidad neta' };
-  const series = BRANCHES.map(b => ({
+  const sel = fSucursal.value;
+  const branches = sel === 'ALL' ? BRANCHES : [sel];
+  const series = branches.map(b => ({
     name: BRANCH_LABEL[b], color: BRANCH_COLOR[b],
     data: months.map(p => sucTrendMetric === 'util_neta' ? utilNetaLive(b, [p]) : sumField('TOTAL', b, sucTrendMetric, [p]))
   }));
