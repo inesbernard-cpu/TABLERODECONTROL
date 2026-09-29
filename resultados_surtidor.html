@@ -710,7 +710,7 @@
           <button data-metric="util_neta">Utilidad neta</button>
         </div>
       </div>
-      <div class="desc">Mes a mes, período seleccionado · una línea por sucursal</div>
+      <div class="desc">Mes a mes, período seleccionado · podés tildar más de una métrica a la vez · con una sucursal filtrada, cada métrica es una línea</div>
       <div class="chart-wrap tall"><div id="chartSucursalTrend" class="chartbox"></div></div>
     </div>
 
@@ -862,7 +862,7 @@ let selectedRubro = null;   // set by clicking a rubro in charts
 let selectedCC = null;      // set by clicking a centro de costo in the donut
 let sucBarKind = 'bar';     // 'bar' | 'line' — Ventas y utilidad neta por sucursal
 let sucRubroKind = 'bar';   // 'bar' | 'line' — Resultado por sucursal y rubro
-let sucTrendMetric = 'ventas'; // 'ventas' | 'util_bruta' | 'util_neta' — Evolución por sucursal
+let sucTrendMetrics = new Set(['ventas']); // subconjunto de 'ventas' | 'util_bruta' | 'util_neta' — Evolución por sucursal
 function filterByBranch(b){ fSucursal.value = b; render(); }
 function filterByMonth(m){ fDesde.value = m; fHasta.value = m; render(); }
 function toggleRubro(r){
@@ -1838,17 +1838,35 @@ function renderCcChip(){
 }
 window.__clearCC = () => { selectedCC = null; render(); };
 
+const METRIC_ORDER = ['ventas','util_bruta','util_neta'];
+const METRIC_COLOR = { ventas: COLORS.petrol2, util_bruta: COLORS.amberDeep, util_neta: COLORS.diesel };
 function renderSucursalTrend(months){
+  const METRIC_LABEL = { ventas:'Ventas', util_bruta:'Utilidad bruta', util_neta:'Utilidad neta' };
   const sel = fSucursal.value;
   const branches = sel === 'ALL' ? BRANCHES : [sel];
-  const series = branches.map(b => ({
-    name: BRANCH_LABEL[b], color: BRANCH_COLOR[b],
-    data: months.map(p => sucTrendMetric === 'util_neta' ? utilNetaLive(b, [p]) : sumField('TOTAL', b, sucTrendMetric, [p]))
-  }));
+  const metrics = METRIC_ORDER.filter(m => sucTrendMetrics.has(m));
+  const multiSuc = branches.length > 1, multiMet = metrics.length > 1;
+  const series = [];
+  branches.forEach(b => {
+    metrics.forEach(m => {
+      const name = multiSuc && multiMet ? `${BRANCH_LABEL[b]} \u2014 ${METRIC_LABEL[m]}`
+                 : multiSuc ? BRANCH_LABEL[b]
+                 : METRIC_LABEL[m];
+      const color = multiMet && !multiSuc ? METRIC_COLOR[m] : BRANCH_COLOR[b];
+      series.push({
+        name, color,
+        data: months.map(p => m === 'util_neta' ? utilNetaLive(b, [p]) : sumField('TOTAL', b, m, [p]))
+      });
+    });
+  });
   lineChart('chartSucursalTrend', {
     labels: months.map(monthLabel), series,
     formatTip: v => fmtMoneyFull(v),
-    onPointClick: (s, li) => { const bk = Object.keys(BRANCH_LABEL).find(k=>BRANCH_LABEL[k]===s.name); if(bk) filterByBranch(bk); }
+    onPointClick: (s, li) => {
+      if (branches.length === 1) return; // ya está filtrado a una sola sucursal
+      const bk = branches.find(b => (multiMet ? s.name.startsWith(BRANCH_LABEL[b]+' \u2014') : s.name===BRANCH_LABEL[b]));
+      if (bk) filterByBranch(bk);
+    }
   });
 }
 
@@ -1978,8 +1996,14 @@ document.getElementById('sucRubroKindToggle').querySelectorAll('button').forEach
 });
 document.getElementById('sucTrendMetricToggle').querySelectorAll('button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    sucTrendMetric = btn.dataset.metric;
-    document.getElementById('sucTrendMetricToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+    const m = btn.dataset.metric;
+    if (sucTrendMetrics.has(m)){
+      if (sucTrendMetrics.size === 1) return; // siempre debe quedar al menos una métrica activa
+      sucTrendMetrics.delete(m);
+    } else {
+      sucTrendMetrics.add(m);
+    }
+    btn.classList.toggle('active', sucTrendMetrics.has(m));
     render();
   });
 });
