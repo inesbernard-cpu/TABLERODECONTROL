@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LA ESTACIÓN SA · Recursos Humanos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#211F2B; --ink-dim:#6B667A; --ink-faint:#9691A3;
+    --paper:#F7F5FA; --card:#FFFFFF; --border:rgba(33,31,43,0.10);
+    --accent:#1D6FA5; --accent-soft:#DCEBF5; --accent-deep:#155380;
+    --up:#1E8A5F; --dn:#C1443C; --radius-l:16px; --radius-m:10px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2,.display{ font-family:'Space Grotesk',sans-serif; letter-spacing:-0.01em; }
+  a{ color:inherit; }
+  .tabular{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; }
+  ::selection{ background:var(--accent-soft); color:var(--accent-deep); }
+
+  .topbar{ background:var(--card); border-bottom:1px solid var(--border); padding:18px 28px; }
+  .topbar-inner{ max-width:1320px; margin:0 auto; }
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-dim); text-decoration:none; margin-bottom:10px; }
+  .brand{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; letter-spacing:0.02em; color:var(--ink-dim); }
+  .brand span{ color:var(--accent); }
+  h1.page-title{ font-size:23px; font-weight:700; margin:2px 0 4px; }
+  .page-sub{ font-size:13.5px; color:var(--ink-dim); margin:0; max-width:70ch; }
+
+  .layout{ max-width:1320px; margin:0 auto; padding:24px 28px 60px; display:flex; gap:20px; align-items:flex-start; }
+
+  /* ---------- sidebar filters ---------- */
+  .sidebar{
+    width:250px; flex-shrink:0; background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m);
+    padding:18px; display:flex; flex-direction:column; gap:18px; position:sticky; top:20px;
+  }
+  .filter-block{ display:flex; flex-direction:column; gap:8px; }
+  .filter-label{ font-size:11.5px; font-weight:600; color:var(--ink-dim); display:flex; align-items:center; gap:6px; }
+  select, .text-input{
+    background:var(--paper); border:1px solid var(--border); color:var(--ink); border-radius:8px;
+    padding:7px 9px; font-size:12.5px; font-family:inherit; width:100%; outline:none;
+  }
+  select:focus, .text-input:focus{ border-color:var(--accent); }
+  .period-row{ display:flex; align-items:center; gap:6px; }
+  .period-sep{ color:var(--ink-faint); font-size:11px; }
+
+  .chip-group{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chip{
+    border:1px solid var(--border); background:var(--paper); color:var(--ink-dim);
+    padding:5px 10px; border-radius:100px; font-size:11.5px; font-weight:500; font-family:inherit; cursor:pointer;
+    display:flex; align-items:center; gap:5px; transition:all .15s ease;
+  }
+  .chip .dot{ width:6px; height:6px; border-radius:50%; }
+  .chip.active{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-deep); }
+  .chip-hint{ font-size:10.5px; color:var(--ink-faint); line-height:1.4; }
+
+  .reset-btn{
+    background:transparent; border:1px solid var(--border); color:var(--ink-dim);
+    padding:8px 10px; border-radius:8px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .reset-btn:hover{ border-color:var(--dn); color:var(--dn); }
+
+  .main{ flex:1; min-width:0; }
+
+  /* KPIs */
+  .kpi-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+  .kpi-card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m); padding:16px 18px; }
+  .kpi-label{ font-size:12px; color:var(--ink-dim); margin-bottom:8px; }
+  .kpi-value{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:22px; line-height:1; }
+
+  /* panels */
+  .grid{ display:grid; grid-template-columns:repeat(12,1fr); gap:14px; }
+  .panel{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m); padding:18px; display:flex; flex-direction:column; }
+  .panel-head{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+  .panel-title{ font-size:13.5px; font-weight:600; }
+  .panel-sub{ font-size:11.5px; color:var(--ink-faint); margin-top:2px; }
+  .chart-box{ position:relative; flex:1; min-height:260px; }
+  .span-12{ grid-column:span 12; } .span-8{ grid-column:span 8; } .span-6{ grid-column:span 6; } .span-4{ grid-column:span 4; }
+
+  .toggle-group{ display:flex; gap:6px; flex-wrap:wrap; }
+  .toggle-group button{
+    border:1px solid var(--border); background:var(--paper); color:var(--ink-dim);
+    padding:5px 11px; border-radius:7px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .toggle-group button.active{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-deep); }
+
+  /* table */
+  .table-wrap{ overflow-x:auto; }
+  table.data{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.data th{ text-align:left; font-weight:600; color:var(--ink-dim); font-size:11px; padding:8px 10px; border-bottom:1px solid var(--border); cursor:pointer; white-space:nowrap; }
+  table.data td{ padding:8px 10px; border-bottom:1px solid rgba(33,31,43,0.05); white-space:nowrap; }
+  table.data tbody tr:hover{ background:var(--paper); }
+  .export-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent-deep);
+    padding:7px 13px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .export-btn:hover{ background:var(--accent); color:#fff; }
+  .table-controls{ display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+  .table-controls .text-input{ max-width:260px; }
+  .table-foot{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-size:11.5px; color:var(--ink-faint); }
+  .pager{ display:flex; gap:6px; }
+  .pager button{ background:var(--paper); border:1px solid var(--border); color:var(--ink-dim); border-radius:7px; padding:5px 10px; font-size:11.5px; font-family:inherit; cursor:pointer; }
+  .pager button:disabled{ opacity:0.4; cursor:not-allowed; }
+  .empty-state{ padding:30px 10px; text-align:center; color:var(--ink-faint); font-size:12.5px; }
+
+  .foot-note{ margin-top:22px; font-size:11.5px; color:var(--ink-faint); line-height:1.6; border-top:1px solid var(--border); padding-top:14px; }
+
+  @media (max-width: 1080px){
+    .layout{ flex-direction:column; }
+    .sidebar{ width:100%; position:static; flex-direction:row; flex-wrap:wrap; }
+    .filter-block{ min-width:180px; flex:1; }
+  }
+  @media (max-width: 780px){
+    .kpi-row{ grid-template-columns:1fr 1fr; }
+    .span-8,.span-6,.span-4{ grid-column:span 12; }
+  }
+  @media (max-width: 640px){
+    .kpi-row{ grid-template-columns:1fr; }
+    .layout{ padding:18px 16px 40px; }
+    .sidebar{ flex-direction:column; }
+  }
+</style>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="back-link" href="inicio.html">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Volver a Inicio
+    </a>
+    <div>
+      <div class="brand">LA ESTACIÓN <span>SA</span></div>
+      <h1 class="page-title">Recursos Humanos</h1>
+      <p class="page-sub">Legajos, haberes, contribuciones patronales y nómina por centro de costo. Los gráficos son interactivos: hacé clic en una barra o línea para aislar ese centro de costo.</p>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="filter-block">
+      <div class="filter-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+        Período
+      </div>
+      <div class="period-row">
+        <select id="fDesde"></select>
+        <span class="period-sep">a</span>
+        <select id="fHasta"></select>
+      </div>
+    </div>
+
+    <div class="filter-block">
+      <div class="filter-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Centro de costo
+      </div>
+      <div class="chip-group" id="fCC"></div>
+      <div class="chip-hint">Clic para ver solo ese centro de costo. Clic de nuevo para volver a ver todos.</div>
+    </div>
+
+    <div class="filter-block">
+      <div class="filter-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        Buscar en la nómina
+      </div>
+      <input type="text" class="text-input" id="fNomina" placeholder="Nombre o legajo…">
+    </div>
+
+    <button class="reset-btn" id="resetBtn">Restablecer filtros</button>
+  </aside>
+
+  <div class="main">
+
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <div class="grid">
+
+      <div class="panel span-8" style="min-height:360px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Evolución mensual</div>
+            <div class="panel-sub" id="trendSub">Total de la empresa</div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+            <div class="toggle-group" id="metricToggle">
+              <button data-metric="legajos" class="active">Legajos</button>
+              <button data-metric="haberes">Haberes</button>
+              <button data-metric="empleador">Contribuciones</button>
+              <button data-metric="total">Total</button>
+            </div>
+            <div class="toggle-group" id="breakdownToggle">
+              <button data-bd="total" class="active">Total empresa</button>
+              <button data-bd="cc">Por centro de costo</button>
+            </div>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartTrend"></canvas></div>
+      </div>
+
+      <div class="panel span-4" style="min-height:360px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Por centro de costo</div>
+            <div class="panel-sub" id="rankingSub">Legajos</div>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartRanking"></canvas></div>
+      </div>
+
+      <div class="panel span-12" style="min-height:280px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Estructura del costo laboral por centro de costo</div>
+            <div class="panel-sub" id="structSub">Haberes vs. contribuciones patronales</div>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartStruct"></canvas></div>
+      </div>
+
+      <div class="panel span-12">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Detalle por centro de costo</div>
+            <div class="panel-sub" id="tableSub">Período seleccionado</div>
+          </div>
+          <button class="export-btn" id="exportCCBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+            Exportar a Excel
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="ccTable"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+
+      <div class="panel span-12">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Nómina</div>
+            <div class="panel-sub" id="nominaSub">Detalle por empleado, período y centros de costo seleccionados</div>
+          </div>
+          <button class="export-btn" id="exportNominaBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+            Exportar nómina
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="nominaTable"><thead></thead><tbody></tbody></table>
+        </div>
+        <div class="table-foot">
+          <div id="nominaInfo"></div>
+          <div class="pager">
+            <button id="nominaPrev">Anterior</button>
+            <button id="nominaNext">Siguiente</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="foot-note">
+      Datos extraídos de "RRHH_08_2025_A_08_2026.pdf" (Listado de totales por Centro de Costo y Legajo, La Estación SA — CUIT 30-67139992-3), 13 períodos, 355 registros de nómina. Noviembre 2025 se recibió con un formato detallado por concepto salarial; se utilizaron los totales por legajo de esa sección. "Haberes" = Hab. Remunerativos + Hab. No remunerativos. "Total" = Haberes + Contribuciones patronales (Empleador). Los importes coinciden exactamente con los totales generales de cada período del informe original.
+    </div>
+
+  </div>
+</div>
+
+<script>
+const RAW = [{"periodo":"2025-08","centro_costo":"PLAYA","legajo":"11","nombre":"SANDOBAL, JUAN ALBERTO","hab_remun":1801436.22,"hab_no_rem":52637.58,"descuentos":470318.93,"empleador":602748.65,"total":2456822.45},{"periodo":"2025-08","centro_costo":"PLAYA","legajo":"33","nombre":"PEREZ, MAURO JOAQUIN","hab_remun":1731250.39,"hab_no_rem":52637.58,"descuentos":398187.57,"empleador":579306.59,"total":2363194.56},{"periodo":"2025-08","centro_costo":"PLAYA","legajo":"55","nombre":"MONGELOS, ELIAS","hab_remun":1452626.14,"hab_no_rem":50672.97,"descuentos":487774.32,"empleador":486246.09,"total":1989545.2},{"periodo":"2025-08","centro_costo":"PLAYA","legajo":"57","nombre":"GONZALEZ, GERARDO CESAR","hab_remun":1637669.29,"hab_no_rem":52637.58,"descuentos":493566.21,"empleador":548050.52,"total":2238357.39},{"periodo":"2025-08","centro_costo":"PLAYA","legajo":"67","nombre":"ALONSO, SANTIAGO","hab_remun":1475147.48,"hab_no_rem":50672.97,"descuentos":339283.89,"empleador":493768.22,"total":2019588.67},{"periodo":"2025-08","centro_costo":"PLAYA","legajo":"69","nombre":"ANTUNEZ, JONATAN GABRIEL","hab_remun":1567483.47,"hab_no_rem":52637.58,"descuentos":638656.82,"empleador":524608.44,"total":2144729.49},{"periodo":"2025-08","centro_costo":"PLAYA","legajo":"70","nombre":"GIMENEZ, VICTOR MANUEL","hab_remun":1407583.47,"hab_no_rem":50672.97,"descuentos":323744.17,"empleador":471201.84,"total":1929458.28},{"periodo":"2025-08","centro_costo":"PLAYA","legajo":"143","nombre":"ROMERO, GABRIEL EDUARDO","hab_remun":1475147.48,"hab_no_rem":50672.97,"descuentos":339283.89,"empleador":493768.22,"total":2019588.67},{"periodo":"2025-08","centro_costo":"PLAYA","legajo":"173","nombre":"ANGELILLO, PABLO JOSE","hab_remun":2187458.25,"hab_no_rem":52637.58,"descuentos":603115.4,"empleador":731680.04,"total":2971775.87},{"periodo":"2025-08","centro_costo":"SHOP","legajo":"22","nombre":"PRIETO, ANDREA NOEMI","hab_remun":1763380.94,"hab_no_rem":0.0,"descuentos":471344.35,"empleador":590626.52,"total":2354007.46},{"periodo":"2025-08","centro_costo":"SHOP","legajo":"23","nombre":"ZALAZAR, ANDREA ALEJANDRA","hab_remun":2000973.33,"hab_no_rem":50117.13,"descuentos":540223.86,"empleador":669814.29,"total":2720904.75},{"periodo":"2025-08","centro_costo":"SHOP","legajo":"24","nombre":"FERREYRA, VALERIA DIANA","hab_remun":1711407.61,"hab_no_rem":0.0,"descuentos":427880.5,"empleador":572973.26,"total":2284380.87},{"periodo":"2025-08","centro_costo":"SHOP","legajo":"26","nombre":"CANO, CLAUDIA CATALINA","hab_remun":1351483.07,"hab_no_rem":0.0,"descuentos":610841.1,"empleador":452464.29,"total":1803947.36},{"periodo":"2025-08","centro_costo":"SHOP","legajo":"29","nombre":"ESCOBAR, JULIA MABEL","hab_remun":2026960.0,"hab_no_rem":0.0,"descuentos":481584.19,"empleador":678073.61,"total":2705033.61},{"periodo":"2025-08","centro_costo":"SHOP","legajo":"60","nombre":"RIGONATTO, ADRIEL ORLANDO","hab_remun":1481239.99,"hab_no_rem":0.0,"descuentos":349465.24,"empleador":495803.12,"total":1977043.11},{"periodo":"2025-08","centro_costo":"SHOP","legajo":"61","nombre":"GARCIA, MAGDALENA ANABELA","hab_remun":1269634.29,"hab_no_rem":0.0,"descuentos":310222.61,"empleador":425126.83,"total":1694761.12},{"periodo":"2025-08","centro_costo":"SHOP","legajo":"62","nombre":"RIQUELME, ANTONELLA","hab_remun":1414417.14,"hab_no_rem":0.0,"descuentos":393242.66,"empleador":473484.27,"total":1887901.41},{"periodo":"2025-08","centro_costo":"TRANSPORTE","legajo":"45","nombre":"BOHOS, SERGIO ADRIAN","hab_remun":2616981.24,"hab_no_rem":1266347.85,"descuentos":588820.79,"empleador":853220.8,"total":4736549.89},{"periodo":"2025-08","centro_costo":"TRANSPORTE","legajo":"72","nombre":"BLASIZA, IVAN ALEJANDRO","hab_remun":2424068.75,"hab_no_rem":1156562.05,"descuentos":545415.46,"empleador":794575.42,"total":4375206.22},{"periodo":"2025-08","centro_costo":"ADMINISTRACION","legajo":"16","nombre":"FRETE, MYRIAN ESTHER","hab_remun":3308613.84,"hab_no_rem":51518.25,"descuentos":1060981.2,"empleador":1106146.0,"total":4466278.09},{"periodo":"2025-08","centro_costo":"ADMINISTRACION","legajo":"21","nombre":"CAMPELO, GIANINA GISELLE","hab_remun":1655070.15,"hab_no_rem":0.0,"descuentos":673999.45,"empleador":554198.55,"total":2209268.7},{"periodo":"2025-08","centro_costo":"ADMINISTRACION","legajo":"25","nombre":"GONZALEZ, LILIAN ELIZABETH","hab_remun":1682928.15,"hab_no_rem":51518.25,"descuentos":387073.46,"empleador":563166.96,"total":2297613.36},{"periodo":"2025-08","centro_costo":"ADMINISTRACION","legajo":"46","nombre":"VERA, GABRIELA BETIANA","hab_remun":1522649.27,"hab_no_rem":51518.25,"descuentos":350209.33,"empleador":509633.83,"total":2083801.35},{"periodo":"2025-08","centro_costo":"ADMINISTRACION","legajo":"73","nombre":"IBAÑEZ, MARIA LUZ","hab_remun":1396715.87,"hab_no_rem":0.0,"descuentos":621244.67,"empleador":467572.06,"total":1864287.93},{"periodo":"2025-08","centro_costo":"GERENCIA","legajo":"50","nombre":"FERRARI, MARCELO ALBERTO","hab_remun":1500000.0,"hab_no_rem":0.0,"descuentos":15000.0,"empleador":68329.62,"total":1568329.62},{"periodo":"2025-08","centro_costo":"GERENCIA","legajo":"51","nombre":"FERRARI, DIEGO EDUARDO","hab_remun":1500000.0,"hab_no_rem":0.0,"descuentos":15000.0,"empleador":68329.62,"total":1568329.62},{"periodo":"2025-09","centro_costo":"PLAYA","legajo":"11","nombre":"SANDOBAL, JUAN ALBERTO","hab_remun":1704673.37,"hab_no_rem":53271.0,"descuentos":515858.19,"empleador":570429.88,"total":2328374.25},{"periodo":"2025-09","centro_costo":"PLAYA","legajo":"33","nombre":"PEREZ, MAURO JOAQUIN","hab_remun":1657321.33,"hab_no_rem":53271.0,"descuentos":381183.9,"empleador":554614.29,"total":2265206.62},{"periodo":"2025-09","centro_costo":"PLAYA","legajo":"55","nombre":"MONGELOS, ELIAS","hab_remun":1424474.48,"hab_no_rem":60281.1,"descuentos":573385.43,"empleador":476843.45,"total":1961599.03},{"periodo":"2025-09","centro_costo":"PLAYA","legajo":"57","nombre":"GONZALEZ, GERARDO CESAR","hab_remun":1562617.26,"hab_no_rem":53271.0,"descuentos":359401.97,"empleador":522983.15,"total":2138871.41},{"periodo":"2025-09","centro_costo":"PLAYA","legajo":"67","nombre":"ALONSO, SANTIAGO","hab_remun":1401682.89,"hab_no_rem":60281.1,"descuentos":322387.08,"empleador":469231.04,"total":1931195.03},{"periodo":"2025-09","centro_costo":"PLAYA","legajo":"69","nombre":"ANTUNEZ, JONATAN GABRIEL","hab_remun":1503427.21,"hab_no_rem":53271.0,"descuentos":589792.71,"empleador":503213.63,"total":2059911.84},{"periodo":"2025-09","centro_costo":"PLAYA","legajo":"70","nombre":"GIMENEZ, VICTOR MANUEL","hab_remun":1401682.89,"hab_no_rem":60281.1,"descuentos":322387.08,"empleador":469231.04,"total":1931195.03},{"periodo":"2025-09","centro_costo":"PLAYA","legajo":"143","nombre":"ROMERO, GABRIEL EDUARDO","hab_remun":1401682.89,"hab_no_rem":60281.1,"descuentos":396286.27,"empleador":469231.04,"total":1931195.03},{"periodo":"2025-09","centro_costo":"PLAYA","legajo":"173","nombre":"ANGELILLO, PABLO JOSE","hab_remun":2166355.73,"hab_no_rem":53271.0,"descuentos":698261.82,"empleador":724631.77,"total":2944258.5},{"periodo":"2025-09","centro_costo":"PLAYA","legajo":"179","nombre":"GOMEZ AMARILLA, EIDER","hab_remun":1244800.76,"hab_no_rem":58271.73,"descuentos":286304.17,"empleador":416832.43,"total":1719904.92},{"periodo":"2025-09","centro_costo":"SHOP","legajo":"22","nombre":"PRIETO, ANDREA NOEMI","hab_remun":1656971.32,"hab_no_rem":0.0,"descuentos":542646.3,"empleador":554497.4,"total":2211468.72},{"periodo":"2025-09","centro_costo":"SHOP","legajo":"23","nombre":"ZALAZAR, ANDREA ALEJANDRA","hab_remun":1904953.41,"hab_no_rem":50718.51,"descuentos":538139.27,"empleador":637323.4,"total":2592995.32},{"periodo":"2025-09","centro_costo":"SHOP","legajo":"24","nombre":"FERREYRA, VALERIA DIANA","hab_remun":1589339.83,"hab_no_rem":0.0,"descuentos":407073.13,"empleador":531908.49,"total":2121248.32},{"periodo":"2025-09","centro_costo":"SHOP","legajo":"26","nombre":"CANO, CLAUDIA CATALINA","hab_remun":1323402.84,"hab_no_rem":0.0,"descuentos":743746.7,"empleador":443085.52,"total":1766488.36},{"periodo":"2025-09","centro_costo":"SHOP","legajo":"29","nombre":"ESCOBAR, JULIA MABEL","hab_remun":1961312.98,"hab_no_rem":0.0,"descuentos":470294.89,"empleador":656147.5,"total":2617460.48},{"periodo":"2025-09","centro_costo":"SHOP","legajo":"60","nombre":"RIGONATTO, ADRIEL ORLANDO","hab_remun":1408989.21,"hab_no_rem":0.0,"descuentos":337104.38,"empleador":471671.33,"total":1880660.54},{"periodo":"2025-09","centro_costo":"SHOP","legajo":"61","nombre":"GARCIA, MAGDALENA ANABELA","hab_remun":1330085.82,"hab_no_rem":0.0,"descuentos":320136.59,"empleador":445317.64,"total":1775403.46},{"periodo":"2025-09","centro_costo":"SHOP","legajo":"62","nombre":"RIQUELME, ANTONELLA","hab_remun":1386445.39,"hab_no_rem":0.0,"descuentos":431125.32,"empleador":464141.72,"total":1850587.11},{"periodo":"2025-09","centro_costo":"TRANSPORTE","legajo":"45","nombre":"BOHOS, SERGIO ADRIAN","hab_remun":2730896.3,"hab_no_rem":1453263.24,"descuentos":614451.66,"empleador":888231.74,"total":5072391.28},{"periodo":"2025-09","centro_costo":"TRANSPORTE","legajo":"72","nombre":"BLASIZA, IVAN ALEJANDRO","hab_remun":2630303.33,"hab_no_rem":1390647.0,"descuentos":591818.25,"empleador":857651.48,"total":4878601.81},{"periodo":"2025-09","centro_costo":"ADMINISTRACION","legajo":"16","nombre":"FRETE, MYRIAN ESTHER","hab_remun":3301973.74,"hab_no_rem":52136.46,"descuentos":1059453.96,"empleador":1103928.17,"total":4458038.37},{"periodo":"2025-09","centro_costo":"ADMINISTRACION","legajo":"21","nombre":"CAMPELO, GIANINA GISELLE","hab_remun":1566796.2,"hab_no_rem":0.0,"descuentos":660363.13,"empleador":524378.88,"total":2091175.08},{"periodo":"2025-09","centro_costo":"ADMINISTRACION","legajo":"25","nombre":"GONZALEZ, LILIAN ELIZABETH","hab_remun":1656779.81,"hab_no_rem":52136.46,"descuentos":381059.35,"empleador":554517.47,"total":2263433.74},{"periodo":"2025-09","centro_costo":"ADMINISTRACION","legajo":"46","nombre":"VERA, GABRIELA BETIANA","hab_remun":1494577.59,"hab_no_rem":52136.46,"descuentos":643752.86,"empleador":500257.89,"total":2046971.94},{"periodo":"2025-09","centro_costo":"ADMINISTRACION","legajo":"73","nombre":"IBAÑEZ, MARIA LUZ","hab_remun":1716311.95,"hab_no_rem":1057754.59,"descuentos":694751.75,"empleador":574401.21,"total":3348467.75},{"periodo":"2025-09","centro_costo":"GERENCIA","legajo":"50","nombre":"FERRARI, MARCELO ALBERTO","hab_remun":1500000.0,"hab_no_rem":0.0,"descuentos":15000.0,"empleador":68329.62,"total":1568329.62},{"periodo":"2025-09","centro_costo":"GERENCIA","legajo":"51","nombre":"FERRARI, DIEGO EDUARDO","hab_remun":1500000.0,"hab_no_rem":0.0,"descuentos":15000.0,"empleador":68329.62,"total":1568329.62},{"periodo":"2025-10","centro_costo":"PLAYA","legajo":"11","nombre":"SANDOBAL, JUAN ALBERTO","hab_remun":1781809.85,"hab_no_rem":54176.67,"descuentos":764927.09,"empleador":596193.47,"total":2432179.99},{"periodo":"2025-10","centro_costo":"PLAYA","legajo":"33","nombre":"PEREZ, MAURO JOAQUIN","hab_remun":1745692.09,"hab_no_rem":54176.67,"descuentos":401509.17,"empleador":584130.12,"total":2383998.88},{"periodo":"2025-10","centro_costo":"PLAYA","legajo":"55","nombre":"MONGELOS, ELIAS","hab_remun":1495048.63,"hab_no_rem":52152.84,"descuentos":633608.35,"empleador":500415.2,"total":2047616.67},{"periodo":"2025-10","centro_costo":"PLAYA","legajo":"57","nombre":"GONZALEZ, GERARDO CESAR","hab_remun":1637338.78,"hab_no_rem":54176.67,"descuentos":376587.92,"empleador":547940.13,"total":2239455.58},{"periodo":"2025-10","centro_costo":"PLAYA","legajo":"67","nombre":"ALONSO, SANTIAGO","hab_remun":1471869.58,"hab_no_rem":52152.84,"descuentos":338530.02,"empleador":492673.4,"total":2016695.82},{"periodo":"2025-10","centro_costo":"PLAYA","legajo":"69","nombre":"ANTUNEZ, JONATAN GABRIEL","hab_remun":1528985.49,"hab_no_rem":54176.67,"descuentos":610568.22,"empleador":511750.11,"total":2094912.27},{"periodo":"2025-10","centro_costo":"PLAYA","legajo":"70","nombre":"GIMENEZ, VICTOR MANUEL","hab_remun":1471869.58,"hab_no_rem":52152.84,"descuentos":338530.02,"empleador":492673.4,"total":2016695.82},{"periodo":"2025-10","centro_costo":"PLAYA","legajo":"143","nombre":"ROMERO, GABRIEL EDUARDO","hab_remun":1448690.53,"hab_no_rem":52152.84,"descuentos":430615.98,"empleador":484931.6,"total":1985774.97},{"periodo":"2025-10","centro_costo":"PLAYA","legajo":"173","nombre":"ANGELILLO, PABLO JOSE","hab_remun":2203183.77,"hab_no_rem":54176.67,"descuentos":806732.26,"empleador":736932.36,"total":2994292.8},{"periodo":"2025-10","centro_costo":"PLAYA","legajo":"179","nombre":"GOMEZ AMARILLA, EIDER","hab_remun":1312320.46,"hab_no_rem":50414.41,"descuentos":301833.68,"empleador":439384.0,"total":1802118.87},{"periodo":"2025-10","centro_costo":"SHOP","legajo":"22","nombre":"PRIETO, ANDREA NOEMI","hab_remun":1730821.2,"hab_no_rem":0.0,"descuentos":626425.37,"empleador":579163.22,"total":2309984.42},{"periodo":"2025-10","centro_costo":"SHOP","legajo":"23","nombre":"ZALAZAR, ANDREA ALEJANDRA","hab_remun":1937144.26,"hab_no_rem":51580.8,"descuentos":545543.18,"empleador":648075.16,"total":2636800.22},{"periodo":"2025-10","centro_costo":"SHOP","legajo":"24","nombre":"FERREYRA, VALERIA DIANA","hab_remun":1662046.85,"hab_no_rem":0.0,"descuentos":417920.28,"empleador":556192.62,"total":2218239.47},{"periodo":"2025-10","centro_costo":"SHOP","legajo":"26","nombre":"CANO, CLAUDIA CATALINA","hab_remun":1390951.79,"hab_no_rem":0.0,"descuentos":769685.49,"empleador":465646.87,"total":1856598.66},{"periodo":"2025-10","centro_costo":"SHOP","legajo":"29","nombre":"ESCOBAR, JULIA MABEL","hab_remun":1994456.22,"hab_no_rem":0.0,"descuentos":479212.42,"empleador":667217.32,"total":2661673.54},{"periodo":"2025-10","centro_costo":"SHOP","legajo":"60","nombre":"RIGONATTO, ADRIEL ORLANDO","hab_remun":1478648.58,"hab_no_rem":0.0,"descuentos":358958.89,"empleador":494937.58,"total":1973586.16},{"periodo":"2025-10","centro_costo":"SHOP","legajo":"61","nombre":"GARCIA, MAGDALENA ANABELA","hab_remun":978124.12,"hab_no_rem":0.0,"descuentos":239104.72,"empleador":328602.85,"total":1306726.97},{"periodo":"2025-10","centro_costo":"SHOP","legajo":"62","nombre":"RIQUELME, ANTONELLA","hab_remun":1478648.58,"hab_no_rem":0.0,"descuentos":359773.68,"empleador":494937.58,"total":1973586.16},{"periodo":"2025-10","centro_costo":"TRANSPORTE","legajo":"45","nombre":"BOHOS, SERGIO ADRIAN","hab_remun":2512541.31,"hab_no_rem":1166021.08,"descuentos":565321.79,"empleador":823093.53,"total":4501655.92},{"periodo":"2025-10","centro_costo":"TRANSPORTE","legajo":"72","nombre":"BLASIZA, IVAN ALEJANDRO","hab_remun":2612451.12,"hab_no_rem":1269482.09,"descuentos":587801.49,"empleador":853466.11,"total":4735399.32},{"periodo":"2025-10","centro_costo":"ADMINISTRACION","legajo":"16","nombre":"FRETE, MYRIAN ESTHER","hab_remun":3523066.95,"hab_no_rem":53022.78,"descuentos":1110305.4,"empleador":1178655.79,"total":4754745.52},{"periodo":"2025-10","centro_costo":"ADMINISTRACION","legajo":"21","nombre":"CAMPELO, GIANINA GISELLE","hab_remun":1637813.73,"hab_no_rem":0.0,"descuentos":676697.16,"empleador":548098.73,"total":2185912.46},{"periodo":"2025-10","centro_costo":"ADMINISTRACION","legajo":"25","nombre":"GONZALEZ, LILIAN ELIZABETH","hab_remun":1684945.06,"hab_no_rem":53022.78,"descuentos":387537.36,"empleador":563882.62,"total":2301850.46},{"periodo":"2025-10","centro_costo":"ADMINISTRACION","legajo":"46","nombre":"VERA, GABRIELA BETIANA","hab_remun":1519985.41,"hab_no_rem":53022.78,"descuentos":649596.63,"empleador":508786.1,"total":2081794.29},{"periodo":"2025-10","centro_costo":"ADMINISTRACION","legajo":"74","nombre":"LOPEZ, MARGARITA","hab_remun":665730.04,"hab_no_rem":0.0,"descuentos":146460.6,"empleador":224053.13,"total":889783.17},{"periodo":"2025-10","centro_costo":"GERENCIA","legajo":"50","nombre":"FERRARI, MARCELO ALBERTO","hab_remun":1500000.0,"hab_no_rem":0.0,"descuentos":15000.0,"empleador":68329.62,"total":1568329.62},{"periodo":"2025-10","centro_costo":"GERENCIA","legajo":"51","nombre":"FERRARI, DIEGO EDUARDO","hab_remun":1500000.0,"hab_no_rem":0.0,"descuentos":15000.0,"empleador":68329.62,"total":1568329.62},{"periodo":"2025-11","centro_costo":"PLAYA","legajo":"11","nombre":"SANDOBAL, JUAN ALBERTO","hab_remun":1750213.56,"hab_no_rem":55076.67,"descuentos":531065.94,"empleador":585640.3,"total":2390930.5300000003},{"periodo":"2025-11","centro_costo":"PLAYA","legajo":"33","nombre":"PEREZ, MAURO JOAQUIN","hab_remun":1799170.59,"hab_no_rem":55076.67,"descuentos":413809.25,"empleador":601991.94,"total":2456239.2},{"periodo":"2025-11","centro_costo":"PLAYA","legajo":"55","nombre":"MONGELOS, ELIAS","hab_remun":1520848.63,"hab_no_rem":77352.84,"descuentos":683287.76,"empleador":509032.4,"total":2107233.87},{"periodo":"2025-11","centro_costo":"PLAYA","legajo":"57","nombre":"GONZALEZ, GERARDO CESAR","hab_remun":1664538.77,"hab_no_rem":55076.67,"descuentos":382843.91,"empleador":557024.93,"total":2276640.37},{"periodo":"2025-11","centro_costo":"PLAYA","legajo":"67","nombre":"ALONSO, SANTIAGO","hab_remun":1450111.48,"hab_no_rem":77352.84,"descuentos":449961.52,"empleador":485406.19,"total":2012870.51},{"periodo":"2025-11","centro_costo":"PLAYA","legajo":"69","nombre":"ANTUNEZ, JONATAN GABRIEL","hab_remun":1578863.98,"hab_no_rem":55076.67,"descuentos":681350.25,"empleador":528955.83,"total":2162896.48},{"periodo":"2025-11","centro_costo":"PLAYA","legajo":"70","nombre":"GIMENEZ, VICTOR MANUEL","hab_remun":1314138.98,"hab_no_rem":72195.98,"descuentos":398470.74,"empleador":440075.44,"total":1826410.4},{"periodo":"2025-11","centro_costo":"PLAYA","legajo":"143","nombre":"ROMERO, GABRIEL EDUARDO","hab_remun":1532638.15,"hab_no_rem":77352.84,"descuentos":424640.88,"empleador":512970.1,"total":2122961.09},{"periodo":"2025-11","centro_costo":"PLAYA","legajo":"173","nombre":"ANGELILLO, PABLO JOSE","hab_remun":2239783.75,"hab_no_rem":55076.67,"descuentos":815150.26,"empleador":749156.75,"total":3044017.17},{"periodo":"2025-11","centro_costo":"PLAYA","legajo":"179","nombre":"GOMEZ AMARILLA, EIDER","hab_remun":1497269.58,"hab_no_rem":77352.84,"descuentos":344372.02,"empleador":501157.0,"total":2075779.4200000002},{"periodo":"2025-11","centro_costo":"SHOP","legajo":"22","nombre":"PRIETO, ANDREA NOEMI","hab_remun":1761021.2,"hab_no_rem":0.0,"descuentos":646234.87,"empleador":589250.02,"total":2350271.2199999997},{"periodo":"2025-11","centro_costo":"SHOP","legajo":"23","nombre":"ZALAZAR, ANDREA ALEJANDRA","hab_remun":1994269.04,"hab_no_rem":52480.8,"descuentos":558681.87,"empleador":667154.81,"total":2713904.6500000004},{"periodo":"2025-11","centro_costo":"SHOP","legajo":"24","nombre":"FERREYRA, VALERIA DIANA","hab_remun":1691046.85,"hab_no_rem":0.0,"descuentos":612125.21,"empleador":565878.62,"total":2256925.47},{"periodo":"2025-11","centro_costo":"SHOP","legajo":"26","nombre":"CANO, CLAUDIA CATALINA","hab_remun":1369800.72,"hab_no_rem":0.0,"descuentos":761563.48,"empleador":458582.38,"total":1828383.1},{"periodo":"2025-11","centro_costo":"SHOP","legajo":"29","nombre":"ESCOBAR, JULIA MABEL","hab_remun":2075905.79,"hab_no_rem":0.0,"descuentos":511589.32,"empleador":694421.51,"total":2770327.3},{"periodo":"2025-11","centro_costo":"SHOP","legajo":"60","nombre":"RIGONATTO, ADRIEL ORLANDO","hab_remun":1504448.58,"hab_no_rem":0.0,"descuentos":369429.7,"empleador":503554.78,"total":2008003.36},{"periodo":"2025-11","centro_costo":"SHOP","legajo":"61","nombre":"GARCIA, MAGDALENA ANABELA","hab_remun":136838.73,"hab_no_rem":0.0,"descuentos":31472.91,"empleador":49123.76,"total":185962.49000000002},{"periodo":"2025-11","centro_costo":"SHOP","legajo":"62","nombre":"RIQUELME, ANTONELLA CONCEPCION","hab_remun":1504448.58,"hab_no_rem":0.0,"descuentos":379564.18,"empleador":503554.78,"total":2008003.36},{"periodo":"2025-11","centro_costo":"TRANSPORTE","legajo":"45","nombre":"BOHOS, SERGIO ADRIAN","hab_remun":2824983.02,"hab_no_rem":1279734.94,"descuentos":635621.18,"empleador":918409.33,"total":5023127.29},{"periodo":"2025-11","centro_costo":"TRANSPORTE","legajo":"72","nombre":"BLASIZA, IVAN ALEJANDRO","hab_remun":2474599.1,"hab_no_rem":1232574.54,"descuentos":556784.79,"empleador":811892.63,"total":4519066.2700000005},{"periodo":"2025-11","centro_costo":"ADMINISTRACION","legajo":"16","nombre":"FRETE, MYRIAN ESTHER","hab_remun":3415107.29,"hab_no_rem":53922.78,"descuentos":1335474.67,"empleador":1141714.8,"total":4610744.87},{"periodo":"2025-11","centro_costo":"ADMINISTRACION","legajo":"21","nombre":"CAMPELO, GIANINA GISELLE","hab_remun":1761476.39,"hab_no_rem":0.0,"descuentos":705139.55,"empleador":589402.07,"total":2350878.46},{"periodo":"2025-11","centro_costo":"ADMINISTRACION","legajo":"25","nombre":"GONZALEZ, LILIAN ELIZABETH","hab_remun":1713545.06,"hab_no_rem":53922.78,"descuentos":394115.36,"empleador":573393.01,"total":2340860.85},{"periodo":"2025-11","centro_costo":"ADMINISTRACION","legajo":"46","nombre":"VERA, GABRIELA BETIANA","hab_remun":1545785.41,"hab_no_rem":53922.78,"descuentos":655530.63,"empleador":517361.29,"total":2117069.48},{"periodo":"2025-11","centro_costo":"ADMINISTRACION","legajo":"74","nombre":"LOPEZ, MARGARITA","hab_remun":1354060.08,"hab_no_rem":0.0,"descuentos":597893.21,"empleador":453325.02,"total":1807385.1},{"periodo":"2025-11","centro_costo":"GERENCIA","legajo":"50","nombre":"FERRARI, MARCELO ALBERTO","hab_remun":1500000.0,"hab_no_rem":0.0,"descuentos":15000.0,"empleador":68329.62,"total":1568329.62},{"periodo":"2025-11","centro_costo":"GERENCIA","legajo":"51","nombre":"FERRARI, DIEGO EDUARDO","hab_remun":1500000.0,"hab_no_rem":0.0,"descuentos":15000.0,"empleador":68329.62,"total":1568329.62},{"periodo":"2025-12","centro_costo":"PLAYA","legajo":"11","nombre":"SANDOBAL, JUAN ALBERTO","hab_remun":3019027.84,"hab_no_rem":120397.05,"descuentos":1770178.18,"empleador":1009424.28,"total":4148849.17},{"periodo":"2025-12","centro_costo":"PLAYA","legajo":"33","nombre":"PEREZ, MAURO JOAQUIN","hab_remun":2934127.56,"hab_no_rem":120397.05,"descuentos":1494896.69,"empleador":981067.56,"total":4035592.17},{"periodo":"2025-12","centro_costo":"PLAYA","legajo":"55","nombre":"MONGELOS, ELIAS","hab_remun":2544155.78,"hab_no_rem":118252.98,"descuentos":1558848.42,"empleador":850817.01,"total":3513225.77},{"periodo":"2025-12","centro_costo":"PLAYA","legajo":"57","nombre":"GONZALEZ, GERARDO CESAR","hab_remun":2794731.84,"hab_no_rem":120397.05,"descuentos":1444072.29,"empleador":934509.4,"total":3849638.29},{"periodo":"2025-12","centro_costo":"PLAYA","legajo":"67","nombre":"ALONSO, SANTIAGO","hab_remun":2502920.16,"hab_no_rem":118252.98,"descuentos":1223323.12,"empleador":837044.29,"total":3458217.43},{"periodo":"2025-12","centro_costo":"PLAYA","legajo":"69","nombre":"ANTUNEZ, JONATAN GABRIEL","hab_remun":2363645.32,"hab_no_rem":116570.58,"descuentos":1638414.44,"empleador":790526.51,"total":3270742.41},{"periodo":"2025-12","centro_costo":"PLAYA","legajo":"70","nombre":"GIMENEZ, VICTOR MANUEL","hab_remun":2248892.91,"hab_no_rem":118252.98,"descuentos":1155305.87,"empleador":752199.2,"total":3119345.09},{"periodo":"2025-12","centro_costo":"PLAYA","legajo":"143","nombre":"ROMERO, GABRIEL EDUARDO","hab_remun":2472200.95,"hab_no_rem":118252.98,"descuentos":1288896.36,"empleador":826784.08,"total":3417238.01},{"periodo":"2025-12","centro_costo":"PLAYA","legajo":"173","nombre":"ANGELILLO, PABLO JOSE","hab_remun":3642769.52,"hab_no_rem":120397.05,"descuentos":1853465.3,"empleador":1217753.99,"total":4980920.56},{"periodo":"2025-12","centro_costo":"PLAYA","legajo":"179","nombre":"GOMEZ AMARILLA, EIDER","hab_remun":2432183.01,"hab_no_rem":118252.98,"descuentos":1294419.98,"empleador":813418.09,"total":3363854.08},{"periodo":"2025-12","centro_costo":"SHOP","legajo":"22","nombre":"PRIETO, ANDREA NOEMI","hab_remun":2932451.76,"hab_no_rem":63000.0,"descuentos":1753646.19,"empleador":980507.86,"total":3975959.62},{"periodo":"2025-12","centro_costo":"SHOP","legajo":"23","nombre":"ZALAZAR, ANDREA ALEJANDRA","hab_remun":3238342.77,"hab_no_rem":117646.92,"descuentos":1801850.14,"empleador":1082675.47,"total":4438665.16},{"periodo":"2025-12","centro_costo":"SHOP","legajo":"24","nombre":"FERREYRA, VALERIA DIANA","hab_remun":2745963.17,"hab_no_rem":63000.0,"descuentos":1743595.03,"empleador":918220.66,"total":3727183.83},{"periodo":"2025-12","centro_costo":"SHOP","legajo":"26","nombre":"CANO, CLAUDIA CATALINA","hab_remun":2363219.71,"hab_no_rem":63000.0,"descuentos":1773700.98,"empleador":790384.33,"total":3216604.04},{"periodo":"2025-12","centro_costo":"SHOP","legajo":"29","nombre":"ESCOBAR, JULIA MABEL","hab_remun":3370906.49,"hab_no_rem":63000.0,"descuentos":1742912.65,"empleador":1126951.74,"total":4560858.23},{"periodo":"2025-12","centro_costo":"SHOP","legajo":"60","nombre":"RIGONATTO, ADRIEL ORLANDO","hab_remun":2515822.86,"hab_no_rem":63000.0,"descuentos":1303010.68,"empleador":841353.81,"total":3420176.67},{"periodo":"2025-12","centro_costo":"SHOP","legajo":"61","nombre":"GARCIA, MAGDALENA ANABELA","hab_remun":2267210.43,"hab_no_rem":63000.0,"descuentos":1104258.35,"empleador":758443.32,"total":3088653.75},{"periodo":"2025-12","centro_costo":"SHOP","legajo":"62","nombre":"RIQUELME, ANTONELLA","hab_remun":2515822.86,"hab_no_rem":63000.0,"descuentos":1445609.72,"empleador":841353.81,"total":3420176.67},{"periodo":"2025-12","centro_costo":"TRANSPORTE","legajo":"45","nombre":"BOHOS, SERGIO ADRIAN","hab_remun":4730878.88,"hab_no_rem":1095839.46,"descuentos":2618259.16,"empleador":1498138.53,"total":7324856.87},{"periodo":"2025-12","centro_costo":"TRANSPORTE","legajo":"72","nombre":"BLASIZA, IVAN ALEJANDRO","hab_remun":4858062.71,"hab_no_rem":10677513.96,"descuentos":2563642.26,"empleador":1536802.42,"total":17072379.09},{"periodo":"2025-12","centro_costo":"ADMINISTRACION","legajo":"16","nombre":"FRETE, MYRIAN ESTHER","hab_remun":5550512.27,"hab_no_rem":119174.58,"descuentos":3350408.7,"empleador":1854940.08,"total":7524626.93},{"periodo":"2025-12","centro_costo":"ADMINISTRACION","legajo":"21","nombre":"CAMPELO, GIANINA GISELLE","hab_remun":2937795.29,"hab_no_rem":63000.0,"descuentos":1809659.87,"empleador":982334.63,"total":3983129.92},{"periodo":"2025-12","centro_costo":"ADMINISTRACION","legajo":"25","nombre":"GONZALEZ, LILIAN ELIZABETH","hab_remun":2784993.9,"hab_no_rem":119174.58,"descuentos":1427165.64,"empleador":931256.92,"total":3835425.4},{"periodo":"2025-12","centro_costo":"ADMINISTRACION","legajo":"46","nombre":"VERA, GABRIELA BETIANA","hab_remun":2512337.15,"hab_no_rem":119174.58,"descuentos":1591775.44,"empleador":840231.58,"total":3471743.31},{"periodo":"2025-12","centro_costo":"ADMINISTRACION","legajo":"74","nombre":"LOPEZ, MARGARITA","hab_remun":1778125.6,"hab_no_rem":63000.0,"descuentos":1010503.89,"empleador":594962.91,"total":2436088.51},{"periodo":"2025-12","centro_costo":"GERENCIA","legajo":"50","nombre":"FERRARI, MARCELO ALBERTO","hab_remun":2250000.0,"hab_no_rem":0.0,"descuentos":765000.0,"empleador":101329.62,"total":2351329.62},{"periodo":"2025-12","centro_costo":"GERENCIA","legajo":"51","nombre":"FERRARI, DIEGO EDUARDO","hab_remun":2250000.0,"hab_no_rem":0.0,"descuentos":765000.0,"empleador":101329.62,"total":2351329.62},{"periodo":"2026-01","centro_costo":"PLAYA","legajo":"11","nombre":"SANDOBAL, JUAN ALBERTO","hab_remun":1983089.85,"hab_no_rem":58326.21,"descuentos":786186.95,"empleador":664681.64,"total":2706097.7},{"periodo":"2026-01","centro_costo":"PLAYA","legajo":"33","nombre":"PEREZ, MAURO JOAQUIN","hab_remun":1879398.86,"hab_no_rem":58326.21,"descuentos":432261.75,"empleador":630048.85,"total":2567773.92},{"periodo":"2026-01","centro_costo":"PLAYA","legajo":"55","nombre":"MONGELOS, ELIAS","hab_remun":1643872.33,"hab_no_rem":56182.95,"descuentos":594682.33,"empleador":551382.99,"total":2251438.27},{"periodo":"2026-01","centro_costo":"PLAYA","legajo":"57","nombre":"GONZALEZ, GERARDO CESAR","hab_remun":1710901.04,"hab_no_rem":58326.21,"descuentos":616962.39,"empleador":573770.56,"total":2342997.81},{"periodo":"2026-01","centro_costo":"PLAYA","legajo":"67","nombre":"ALONSO, SANTIAGO","hab_remun":1560638.29,"hab_no_rem":56182.95,"descuentos":358946.8,"empleador":523582.82,"total":2140404.06},{"periodo":"2026-01","centro_costo":"PLAYA","legajo":"69","nombre":"ANTUNEZ, JONATAN GABRIEL","hab_remun":1620171.43,"hab_no_rem":58326.21,"descuentos":606159.81,"empleador":543466.88,"total":2221964.52},{"periodo":"2026-01","centro_costo":"PLAYA","legajo":"70","nombre":"GIMENEZ, VICTOR MANUEL","hab_remun":1435787.22,"hab_no_rem":56182.95,"descuentos":403025.06,"empleador":481882.53,"total":1973852.7},{"periodo":"2026-01","centro_costo":"PLAYA","legajo":"143","nombre":"ROMERO, GABRIEL EDUARDO","hab_remun":1648034.06,"hab_no_rem":56182.95,"descuentos":526840.57,"empleador":552772.99,"total":2256990.0},{"periodo":"2026-01","centro_costo":"PLAYA","legajo":"173","nombre":"ANGELILLO, PABLO JOSE","hab_remun":2371931.0,"hab_no_rem":58326.21,"descuentos":545544.13,"empleador":794554.57,"total":3224811.78},{"periodo":"2026-01","centro_costo":"PLAYA","legajo":"179","nombre":"GOMEZ AMARILLA, EIDER","hab_remun":1535668.07,"hab_no_rem":56182.95,"descuentos":353203.65,"empleador":515242.74,"total":2107093.76},{"periodo":"2026-01","centro_costo":"SHOP","legajo":"22","nombre":"PRIETO, ANDREA NOEMI","hab_remun":1898473.7,"hab_no_rem":0.0,"descuentos":691265.48,"empleador":636419.82,"total":2534893.52},{"periodo":"2026-01","centro_costo":"SHOP","legajo":"23","nombre":"ZALAZAR, ANDREA ALEJANDRA","hab_remun":2076582.11,"hab_no_rem":54646.92,"descuentos":477613.87,"empleador":695908.04,"total":2827137.07},{"periodo":"2026-01","centro_costo":"SHOP","legajo":"24","nombre":"FERREYRA, VALERIA DIANA","hab_remun":1736556.97,"hab_no_rem":0.0,"descuentos":623262.69,"empleador":582339.67,"total":2318896.64},{"periodo":"2026-01","centro_costo":"SHOP","legajo":"26","nombre":"CANO, CLAUDIA CATALINA","hab_remun":1543809.15,"hab_no_rem":0.0,"descuentos":824622.7,"empleador":517961.88,"total":2061771.03},{"periodo":"2026-01","centro_costo":"SHOP","legajo":"29","nombre":"ESCOBAR, JULIA MABEL","hab_remun":2113013.37,"hab_no_rem":0.0,"descuentos":492215.31,"empleador":708076.09,"total":2821089.46},{"periodo":"2026-01","centro_costo":"SHOP","legajo":"60","nombre":"RIGONATTO, ADRIEL ORLANDO","hab_remun":1517969.38,"hab_no_rem":0.0,"descuentos":353867.32,"empleador":509331.39,"total":2027300.77},{"periodo":"2026-01","centro_costo":"SHOP","legajo":"61","nombre":"GARCIA, MAGDALENA ANABELA","hab_remun":1570592.31,"hab_no_rem":0.0,"descuentos":577242.69,"empleador":526907.47,"total":2097499.78},{"periodo":"2026-01","centro_costo":"SHOP","legajo":"62","nombre":"RIQUELME, ANTONELLA","hab_remun":1517969.38,"hab_no_rem":0.0,"descuentos":560114.19,"empleador":509331.39,"total":2027300.77},{"periodo":"2026-01","centro_costo":"TRANSPORTE","legajo":"45","nombre":"BOHOS, SERGIO ADRIAN","hab_remun":2730316.56,"hab_no_rem":1389138.88,"descuentos":614321.24,"empleador":892968.55,"total":5012423.99},{"periodo":"2026-01","centro_costo":"TRANSPORTE","legajo":"75","nombre":"BORDÓN, CANDIDO DIONICIO","hab_remun":1796360.85,"hab_no_rem":968067.99,"descuentos":1021618.27,"empleador":603108.9,"total":3367537.74},{"periodo":"2026-01","centro_costo":"ADMINISTRACION","legajo":"16","nombre":"FRETE, MYRIAN ESTHER","hab_remun":3616598.59,"hab_no_rem":57104.19,"descuentos":1381817.69,"empleador":1210273.56,"total":4883976.34},{"periodo":"2026-01","centro_costo":"ADMINISTRACION","legajo":"21","nombre":"CAMPELO, GIANINA GISELLE","hab_remun":1789264.57,"hab_no_rem":0.0,"descuentos":661530.87,"empleador":599943.98,"total":2389208.55},{"periodo":"2026-01","centro_costo":"ADMINISTRACION","legajo":"25","nombre":"GONZALEZ, LILIAN ELIZABETH","hab_remun":2028679.17,"hab_no_rem":57104.19,"descuentos":466596.22,"empleador":679908.45,"total":2765691.81},{"periodo":"2026-01","centro_costo":"ADMINISTRACION","legajo":"46","nombre":"VERA, GABRIELA BETIANA","hab_remun":1491053.81,"hab_no_rem":55200.72,"descuentos":642942.37,"empleador":500341.62,"total":2046596.15},{"periodo":"2026-01","centro_costo":"ADMINISTRACION","legajo":"74","nombre":"LOPEZ, MARGARITA","hab_remun":1433949.62,"hab_no_rem":57104.19,"descuentos":615468.93,"empleador":481268.79,"total":1972322.6},{"periodo":"2026-01","centro_costo":"GERENCIA","legajo":"50","nombre":"FERRARI, MARCELO ALBERTO","hab_remun":2200000.0,"hab_no_rem":0.0,"descuentos":22000.0,"empleador":99129.62,"total":2299129.62},{"periodo":"2026-01","centro_costo":"GERENCIA","legajo":"51","nombre":"FERRARI, DIEGO EDUARDO","hab_remun":2200000.0,"hab_no_rem":0.0,"descuentos":22000.0,"empleador":99129.62,"total":2299129.62},{"periodo":"2026-02","centro_costo":"PLAYA","legajo":"11","nombre":"SANDOBAL, JUAN ALBERTO","hab_remun":1996051.21,"hab_no_rem":58326.21,"descuentos":716631.51,"empleador":667750.06,"total":2722127.48},{"periodo":"2026-02","centro_costo":"PLAYA","legajo":"33","nombre":"PEREZ, MAURO JOAQUIN","hab_remun":1918282.99,"hab_no_rem":58326.21,"descuentos":441205.09,"empleador":642027.6,"total":2618636.8},{"periodo":"2026-02","centro_costo":"PLAYA","legajo":"55","nombre":"MONGELOS, ELIAS","hab_remun":1693812.76,"hab_no_rem":56182.95,"descuentos":717421.54,"empleador":567096.6,"total":2317092.31},{"periodo":"2026-02","centro_costo":"PLAYA","legajo":"57","nombre":"GONZALEZ, GERARDO CESAR","hab_remun":1831873.84,"hab_no_rem":58326.21,"descuentos":433684.71,"empleador":613503.13,"total":2503703.18},{"periodo":"2026-02","centro_costo":"PLAYA","legajo":"67","nombre":"ALONSO, SANTIAGO","hab_remun":1610578.72,"hab_no_rem":56182.95,"descuentos":370433.11,"empleador":539002.25,"total":2205763.92},{"periodo":"2026-02","centro_costo":"PLAYA","legajo":"69","nombre":"ANTUNEZ, JONATAN GABRIEL","hab_remun":1723862.4,"hab_no_rem":58326.21,"descuentos":751548.99,"empleador":576839.0,"total":2359027.61},{"periodo":"2026-02","centro_costo":"PLAYA","legajo":"70","nombre":"GIMENEZ, VICTOR MANUEL","hab_remun":1585608.5,"hab_no_rem":56182.95,"descuentos":364689.99,"empleador":530662.21,"total":2172453.66},{"periodo":"2026-02","centro_costo":"PLAYA","legajo":"76","nombre":"GIMENEZ, MAIRA NADIN","hab_remun":1444508.98,"hab_no_rem":0.0,"descuentos":317791.98,"empleador":483534.96,"total":1928043.94},{"periodo":"2026-02","centro_costo":"PLAYA","legajo":"143","nombre":"ROMERO, GABRIEL EDUARDO","hab_remun":1735429.8,"hab_no_rem":56182.95,"descuentos":480192.46,"empleador":580702.55,"total":2372315.3},{"periodo":"2026-02","centro_costo":"PLAYA","legajo":"173","nombre":"ANGELILLO, PABLO JOSE","hab_remun":2371931.0,"hab_no_rem":58326.21,"descuentos":545544.13,"empleador":793293.92,"total":3223551.13},{"periodo":"2026-02","centro_costo":"PLAYA","legajo":"179","nombre":"GOMEZ AMARILLA, EIDER","hab_remun":1635548.92,"hab_no_rem":56182.95,"descuentos":376176.26,"empleador":547342.32,"total":2239074.19},{"periodo":"2026-02","centro_costo":"SHOP","legajo":"22","nombre":"PRIETO, ANDREA NOEMI","hab_remun":1882282.03,"hab_no_rem":0.0,"descuentos":690588.03,"empleador":629751.16,"total":2512033.19},{"periodo":"2026-02","centro_costo":"SHOP","legajo":"23","nombre":"ZALAZAR, ANDREA ALEJANDRA","hab_remun":2076582.11,"hab_no_rem":54646.92,"descuentos":477613.87,"empleador":694647.39,"total":2825876.42},{"periodo":"2026-02","centro_costo":"SHOP","legajo":"24","nombre":"FERREYRA, VALERIA DIANA","hab_remun":1833707.01,"hab_no_rem":0.0,"descuentos":648736.5,"empleador":613527.1,"total":2447234.11},{"periodo":"2026-02","centro_costo":"SHOP","legajo":"26","nombre":"CANO, CLAUDIA CATALINA","hab_remun":1766117.67,"hab_no_rem":0.0,"descuentos":958829.19,"empleador":591834.71,"total":2357952.38},{"periodo":"2026-02","centro_costo":"SHOP","legajo":"29","nombre":"ESCOBAR, JULIA MABEL","hab_remun":2331600.96,"hab_no_rem":0.0,"descuentos":550077.74,"empleador":780958.28,"total":3112559.24},{"periodo":"2026-02","centro_costo":"SHOP","legajo":"60","nombre":"RIGONATTO, ADRIEL ORLANDO","hab_remun":1615119.42,"hab_no_rem":0.0,"descuentos":387058.18,"empleador":540518.86,"total":2155638.28},{"periodo":"2026-02","centro_costo":"SHOP","legajo":"61","nombre":"GARCIA, MAGDALENA ANABELA","hab_remun":1554400.64,"hab_no_rem":0.0,"descuentos":676324.84,"empleador":520238.78,"total":2074639.42},{"periodo":"2026-02","centro_costo":"SHOP","legajo":"62","nombre":"RIQUELME, ANTONELLA","hab_remun":1615119.42,"hab_no_rem":0.0,"descuentos":681468.18,"empleador":540518.86,"total":2155638.28},{"periodo":"2026-02","centro_costo":"TRANSPORTE","legajo":"45","nombre":"BOHOS, SERGIO ADRIAN","hab_remun":2336124.12,"hab_no_rem":831295.82,"descuentos":525627.91,"empleador":755953.06,"total":3923373.0},{"periodo":"2026-02","centro_costo":"TRANSPORTE","legajo":"75","nombre":"BORDÓN, CANDIDO DIONICIO","hab_remun":2564339.07,"hab_no_rem":1383726.27,"descuentos":576976.29,"empleador":841466.86,"total":4789532.2},{"periodo":"2026-02","centro_costo":"ADMINISTRACION","legajo":"16","nombre":"FRETE, MYRIAN ESTHER","hab_remun":3735036.91,"hab_no_rem":57104.19,"descuentos":1409058.5,"empleador":1249159.62,"total":5041300.72},{"periodo":"2026-02","centro_costo":"ADMINISTRACION","legajo":"21","nombre":"CAMPELO, GIANINA GISELLE","hab_remun":1789264.57,"hab_no_rem":0.0,"descuentos":861530.87,"empleador":598683.32,"total":2387947.89},{"periodo":"2026-02","centro_costo":"ADMINISTRACION","legajo":"25","nombre":"GONZALEZ, LILIAN ELIZABETH","hab_remun":715282.83,"hab_no_rem":57104.19,"descuentos":164515.04,"empleador":241234.1,"total":1013621.12},{"periodo":"2026-02","centro_costo":"ADMINISTRACION","legajo":"46","nombre":"VERA, GABRIELA BETIANA","hab_remun":1622603.61,"hab_no_rem":1535468.18,"descuentos":373198.85,"empleador":544279.23,"total":3702351.02},{"periodo":"2026-02","centro_costo":"ADMINISTRACION","legajo":"74","nombre":"LOPEZ, MARGARITA","hab_remun":1433949.62,"hab_no_rem":57104.19,"descuentos":615468.93,"empleador":480008.13,"total":1971061.94},{"periodo":"2026-02","centro_costo":"GERENCIA","legajo":"50","nombre":"FERRARI, MARCELO ALBERTO","hab_remun":2200000.0,"hab_no_rem":0.0,"descuentos":22000.0,"empleador":99129.62,"total":2299129.62},{"periodo":"2026-02","centro_costo":"GERENCIA","legajo":"51","nombre":"FERRARI, DIEGO EDUARDO","hab_remun":2200000.0,"hab_no_rem":0.0,"descuentos":22000.0,"empleador":99129.62,"total":2299129.62},{"periodo":"2026-03","centro_costo":"PLAYA","legajo":"11","nombre":"SANDOBAL, JUAN ALBERTO","hab_remun":2182695.04,"hab_no_rem":65418.57,"descuentos":565832.16,"empleador":730089.1,"total":2978202.71},{"periodo":"2026-03","centro_costo":"PLAYA","legajo":"33","nombre":"PEREZ, MAURO JOAQUIN","hab_remun":2263698.39,"hab_no_rem":65418.57,"descuentos":582066.83,"empleador":757774.56,"total":3086891.52},{"periodo":"2026-03","centro_costo":"PLAYA","legajo":"55","nombre":"MONGELOS, ELIAS","hab_remun":1782746.67,"hab_no_rem":63014.94,"descuentos":713488.03,"empleador":596506.33,"total":2442267.94},{"periodo":"2026-03","centro_costo":"PLAYA","legajo":"57","nombre":"GONZALEZ, GERARDO CESAR","hab_remun":2076916.42,"hab_no_rem":65418.57,"descuentos":668875.15,"empleador":694759.05,"total":2837094.04},{"periodo":"2026-03","centro_costo":"PLAYA","legajo":"67","nombre":"ALONSO, SANTIAGO","hab_remun":1824430.26,"hab_no_rem":63014.94,"descuentos":471472.71,"empleador":610512.74,"total":2497957.94},{"periodo":"2026-03","centro_costo":"PLAYA","legajo":"69","nombre":"ANTUNEZ, JONATAN GABRIEL","hab_remun":1877408.08,"hab_no_rem":65418.57,"descuentos":710201.92,"empleador":628123.25,"total":2570949.9},{"periodo":"2026-03","centro_costo":"PLAYA","legajo":"70","nombre":"GIMENEZ, VICTOR MANUEL","hab_remun":1778418.49,"hab_no_rem":63014.94,"descuentos":630620.2,"empleador":595060.74,"total":2436494.17},{"periodo":"2026-03","centro_costo":"PLAYA","legajo":"76","nombre":"GIMENEZ, MAIRA NADIN","hab_remun":1566286.05,"hab_no_rem":0.0,"descuentos":389651.61,"empleador":524208.49,"total":2090494.54},{"periodo":"2026-03","centro_costo":"PLAYA","legajo":"143","nombre":"ROMERO, GABRIEL EDUARDO","hab_remun":1883439.85,"hab_no_rem":63014.94,"descuentos":488890.06,"empleador":630726.18,"total":2577180.97},{"periodo":"2026-03","centro_costo":"PLAYA","legajo":"173","nombre":"ANGELILLO, PABLO JOSE","hab_remun":2940738.22,"hab_no_rem":65418.57,"descuentos":951758.32,"empleador":983275.5,"total":3989432.29},{"periodo":"2026-03","centro_costo":"PLAYA","legajo":"179","nombre":"GOMEZ AMARILLA, EIDER","hab_remun":1726400.55,"hab_no_rem":63014.94,"descuentos":449695.04,"empleador":577686.74,"total":2367102.23},{"periodo":"2026-03","centro_costo":"SHOP","legajo":"22","nombre":"PRIETO, ANDREA NOEMI","hab_remun":2125706.71,"hab_no_rem":0.0,"descuentos":881567.72,"empleador":711054.99,"total":2836761.7},{"periodo":"2026-03","centro_costo":"SHOP","legajo":"23","nombre":"ZALAZAR, ANDREA ALEJANDRA","hab_remun":2533213.22,"hab_no_rem":63265.59,"descuentos":778058.58,"empleador":847456.32,"total":3443935.13},{"periodo":"2026-03","centro_costo":"SHOP","legajo":"24","nombre":"FERREYRA, VALERIA DIANA","hab_remun":2096187.38,"hab_no_rem":0.0,"descuentos":811600.49,"empleador":701573.76,"total":2797761.14},{"periodo":"2026-03","centro_costo":"SHOP","legajo":"26","nombre":"CANO, CLAUDIA CATALINA","hab_remun":1634453.64,"hab_no_rem":0.0,"descuentos":976273.39,"empleador":546976.47,"total":2181430.11},{"periodo":"2026-03","centro_costo":"SHOP","legajo":"29","nombre":"ESCOBAR, JULIA MABEL","hab_remun":2583549.87,"hab_no_rem":0.0,"descuentos":701228.23,"empleador":864310.8,"total":3447860.67},{"periodo":"2026-03","centro_costo":"SHOP","legajo":"60","nombre":"RIGONATTO, ADRIEL ORLANDO","hab_remun":1941086.65,"hab_no_rem":0.0,"descuentos":845444.38,"empleador":649980.2,"total":2591066.85},{"periodo":"2026-03","centro_costo":"SHOP","legajo":"61","nombre":"GARCIA, MAGDALENA ANABELA","hab_remun":1746114.62,"hab_no_rem":0.0,"descuentos":789367.5,"empleador":584271.24,"total":2330385.86},{"periodo":"2026-03","centro_costo":"SHOP","legajo":"62","nombre":"RIQUELME, ANTONELLA","hab_remun":1816409.45,"hab_no_rem":0.0,"descuentos":805509.09,"empleador":607749.71,"total":2424159.16},{"periodo":"2026-03","centro_costo":"TRANSPORTE","legajo":"45","nombre":"BOHOS, SERGIO ADRIAN","hab_remun":2930714.12,"hab_no_rem":1563095.83,"descuentos":859410.66,"empleador":953564.49,"total":5447374.44},{"periodo":"2026-03","centro_costo":"TRANSPORTE","legajo":"75","nombre":"BORDÓN, CANDIDO DIONICIO","hab_remun":2513638.36,"hab_no_rem":1353176.81,"descuentos":565568.63,"empleador":826773.45,"total":4693588.62},{"periodo":"2026-03","centro_costo":"ADMINISTRACION","legajo":"16","nombre":"FRETE, MYRIAN ESTHER","hab_remun":4141882.66,"hab_no_rem":64048.05,"descuentos":1684073.28,"empleador":1384457.76,"total":5590388.47},{"periodo":"2026-03","centro_costo":"ADMINISTRACION","legajo":"21","nombre":"CAMPELO, GIANINA GISELLE","hab_remun":2116641.6,"hab_no_rem":0.0,"descuentos":941937.67,"empleador":708027.26,"total":2824668.86},{"periodo":"2026-03","centro_costo":"ADMINISTRACION","legajo":"25","nombre":"GONZALEZ, LILIAN ELIZABETH","hab_remun":165864.4,"hab_no_rem":64048.05,"descuentos":62464.68,"empleador":57728.34,"total":287640.79},{"periodo":"2026-03","centro_costo":"ADMINISTRACION","legajo":"74","nombre":"LOPEZ, MARGARITA","hab_remun":1969751.01,"hab_no_rem":64048.05,"descuentos":800067.03,"empleador":659049.84,"total":2692848.9},{"periodo":"2026-03","centro_costo":"GERENCIA","legajo":"50","nombre":"FERRARI, MARCELO ALBERTO","hab_remun":2200000.0,"hab_no_rem":0.0,"descuentos":22000.0,"empleador":99129.62,"total":2299129.62},{"periodo":"2026-03","centro_costo":"GERENCIA","legajo":"51","nombre":"FERRARI, DIEGO EDUARDO","hab_remun":2200000.0,"hab_no_rem":0.0,"descuentos":22000.0,"empleador":99129.62,"total":2299129.62},{"periodo":"2026-04","centro_costo":"PLAYA","legajo":"1","nombre":"RIVAS, HUMBERTO SERGIO","hab_remun":0.0,"hab_no_rem":0.0,"descuentos":0.0,"empleador":0.0,"total":0.0},{"periodo":"2026-04","centro_costo":"PLAYA","legajo":"11","nombre":"SANDOBAL, JUAN ALBERTO","hab_remun":2116871.97,"hab_no_rem":63085.59,"descuentos":785605.08,"empleador":708104.21,"total":2888061.77},{"periodo":"2026-04","centro_costo":"PLAYA","legajo":"33","nombre":"PEREZ, MAURO JOAQUIN","hab_remun":2046776.87,"hab_no_rem":63085.59,"descuentos":470758.7,"empleador":684692.44,"total":2794554.9},{"periodo":"2026-04","centro_costo":"PLAYA","legajo":"55","nombre":"MONGELOS, ELIAS","hab_remun":1823025.3,"hab_no_rem":60767.55,"descuentos":710487.11,"empleador":609959.42,"total":2493752.27},{"periodo":"2026-04","centro_costo":"PLAYA","legajo":"57","nombre":"GONZALEZ, GERARDO CESAR","hab_remun":1990700.8,"hab_no_rem":63085.59,"descuentos":795474.91,"empleador":665963.04,"total":2719749.43},{"periodo":"2026-04","centro_costo":"PLAYA","legajo":"67","nombre":"ALONSO, SANTIAGO","hab_remun":1796017.51,"hab_no_rem":60767.55,"descuentos":413084.06,"empleador":601443.07,"total":2458228.13},{"periodo":"2026-04","centro_costo":"PLAYA","legajo":"69","nombre":"ANTUNEZ, JONATAN GABRIEL","hab_remun":1911259.68,"hab_no_rem":63085.59,"descuentos":723062.91,"empleador":640018.0,"total":2614363.27},{"periodo":"2026-04","centro_costo":"PLAYA","legajo":"70","nombre":"GIMENEZ, VICTOR MANUEL","hab_remun":1751004.54,"hab_no_rem":60767.55,"descuentos":618326.0,"empleador":586072.57,"total":2397844.66},{"periodo":"2026-04","centro_costo":"PLAYA","legajo":"76","nombre":"GIMENEZ, MAIRA NADIN","hab_remun":1629724.91,"hab_no_rem":0.0,"descuentos":558539.49,"empleador":545397.09,"total":2175122.0},{"periodo":"2026-04","centro_costo":"PLAYA","legajo":"77","nombre":"LANDI, DANTE FEDERICO","hab_remun":1742001.95,"hab_no_rem":60767.55,"descuentos":383240.43,"empleador":582897.62,"total":2385667.12},{"periodo":"2026-04","centro_costo":"PLAYA","legajo":"143","nombre":"ROMERO, GABRIEL EDUARDO","hab_remun":1877040.85,"hab_no_rem":60767.55,"descuentos":645244.66,"empleador":628000.62,"total":2565809.02},{"periodo":"2026-04","centro_costo":"PLAYA","legajo":"173","nombre":"ANGELILLO, PABLO JOSE","hab_remun":2845860.98,"hab_no_rem":63085.59,"descuentos":954548.03,"empleador":951586.52,"total":3860533.09},{"periodo":"2026-04","centro_costo":"PLAYA","legajo":"179","nombre":"GOMEZ AMARILLA, EIDER","hab_remun":1769009.73,"hab_no_rem":60767.55,"descuentos":573114.2,"empleador":591918.2,"total":2421695.48},{"periodo":"2026-04","centro_costo":"SHOP","legajo":"22","nombre":"PRIETO, ANDREA NOEMI","hab_remun":2168492.78,"hab_no_rem":0.0,"descuentos":807772.19,"empleador":725807.82,"total":2894300.6},{"periodo":"2026-04","centro_costo":"SHOP","legajo":"23","nombre":"ZALAZAR, ANDREA ALEJANDRA","hab_remun":2386677.89,"hab_no_rem":60112.26,"descuentos":748935.93,"empleador":798387.48,"total":3245177.63},{"periodo":"2026-04","centro_costo":"SHOP","legajo":"24","nombre":"FERREYRA, VALERIA DIANA","hab_remun":1954760.44,"hab_no_rem":0.0,"descuentos":679722.35,"empleador":654169.06,"total":2608929.5},{"periodo":"2026-04","centro_costo":"SHOP","legajo":"26","nombre":"CANO, CLAUDIA CATALINA","hab_remun":1444763.57,"hab_no_rem":0.0,"descuentos":632295.64,"empleador":484250.32,"total":1929013.89},{"periodo":"2026-04","centro_costo":"SHOP","legajo":"29","nombre":"ESCOBAR, JULIA MABEL","hab_remun":2377772.37,"hab_no_rem":0.0,"descuentos":557068.95,"empleador":795328.98,"total":3173101.35},{"periodo":"2026-04","centro_costo":"SHOP","legajo":"60","nombre":"RIGONATTO, ADRIEL ORLANDO","hab_remun":1776650.14,"hab_no_rem":0.0,"descuentos":725706.37,"empleador":594470.11,"total":2371120.25},{"periodo":"2026-04","centro_costo":"SHOP","legajo":"61","nombre":"GARCIA, MAGDALENA ANABELA","hab_remun":1656425.7,"hab_no_rem":0.0,"descuentos":698994.24,"empleador":554315.14,"total":2210740.84},{"periodo":"2026-04","centro_costo":"SHOP","legajo":"62","nombre":"RIQUELME, ANTONELLA","hab_remun":1901327.34,"hab_no_rem":0.0,"descuentos":739257.92,"empleador":636700.61,"total":2538027.95},{"periodo":"2026-04","centro_costo":"TRANSPORTE","legajo":"45","nombre":"BOHOS, SERGIO ADRIAN","hab_remun":2820363.66,"hab_no_rem":1336887.44,"descuentos":806378.18,"empleador":922692.95,"total":5079944.05},{"periodo":"2026-04","centro_costo":"TRANSPORTE","legajo":"75","nombre":"BORDÓN, CANDIDO DIONICIO","hab_remun":2816294.36,"hab_no_rem":1489265.71,"descuentos":605503.29,"empleador":921455.88,"total":5227015.95},{"periodo":"2026-04","centro_costo":"ADMINISTRACION","legajo":"16","nombre":"FRETE, MYRIAN ESTHER","hab_remun":4080991.84,"hab_no_rem":61763.85,"descuentos":1538628.14,"empleador":1364708.55,"total":5507464.24},{"periodo":"2026-04","centro_costo":"ADMINISTRACION","legajo":"21","nombre":"CAMPELO, GIANINA GISELLE","hab_remun":2045071.02,"hab_no_rem":0.0,"descuentos":770366.33,"empleador":684122.68,"total":2729193.7},{"periodo":"2026-04","centro_costo":"ADMINISTRACION","legajo":"25","nombre":"GONZALEZ, LILIAN ELIZABETH","hab_remun":1688212.99,"hab_no_rem":61763.85,"descuentos":388288.99,"empleador":564932.11,"total":2314908.95},{"periodo":"2026-04","centro_costo":"ADMINISTRACION","legajo":"74","nombre":"LOPEZ, MARGARITA","hab_remun":1903242.83,"hab_no_rem":61763.85,"descuentos":737745.84,"empleador":636794.09,"total":2601800.77},{"periodo":"2026-04","centro_costo":"GERENCIA","legajo":"50","nombre":"FERRARI, MARCELO ALBERTO","hab_remun":2200000.0,"hab_no_rem":0.0,"descuentos":22000.0,"empleador":99129.62,"total":2299129.62},{"periodo":"2026-04","centro_costo":"GERENCIA","legajo":"51","nombre":"FERRARI, DIEGO EDUARDO","hab_remun":2200000.0,"hab_no_rem":0.0,"descuentos":22000.0,"empleador":99129.62,"total":2299129.62},{"periodo":"2026-05","centro_costo":"PLAYA","legajo":"1","nombre":"RIVAS, HUMBERTO SERGIO","hab_remun":0.0,"hab_no_rem":0.0,"descuentos":0.0,"empleador":0.0,"total":0.0},{"periodo":"2026-05","centro_costo":"PLAYA","legajo":"11","nombre":"SANDOBAL, JUAN ALBERTO","hab_remun":2448857.4,"hab_no_rem":139982.63,"descuentos":1031452.47,"empleador":826764.34,"total":3415604.37},{"periodo":"2026-05","centro_costo":"PLAYA","legajo":"33","nombre":"PEREZ, MAURO JOAQUIN","hab_remun":2246307.08,"hab_no_rem":139982.63,"descuentos":522306.62,"empleador":759112.51,"total":3145402.22},{"periodo":"2026-05","centro_costo":"PLAYA","legajo":"55","nombre":"MONGELOS, ELIAS","hab_remun":2055552.98,"hab_no_rem":137559.11,"descuentos":1115866.63,"empleador":695400.65,"total":2888512.74},{"periodo":"2026-05","centro_costo":"PLAYA","legajo":"57","nombre":"GONZALEZ, GERARDO CESAR","hab_remun":2275744.55,"hab_no_rem":139982.63,"descuentos":792196.93,"empleador":768944.63,"total":3184671.81},{"periodo":"2026-05","centro_costo":"PLAYA","legajo":"67","nombre":"ALONSO, SANTIAGO","hab_remun":1965753.87,"hab_no_rem":137559.11,"descuentos":487984.77,"empleador":665407.76,"total":2768720.74},{"periodo":"2026-05","centro_costo":"PLAYA","legajo":"69","nombre":"ANTUNEZ, JONATAN GABRIEL","hab_remun":2131017.99,"hab_no_rem":139982.63,"descuentos":907612.34,"empleador":720605.96,"total":2991606.58},{"periodo":"2026-05","centro_costo":"PLAYA","legajo":"70","nombre":"GIMENEZ, VICTOR MANUEL","hab_remun":1968913.4,"hab_no_rem":137559.11,"descuentos":899514.8,"empleador":666883.25,"total":2773355.76},{"periodo":"2026-05","centro_costo":"PLAYA","legajo":"76","nombre":"GIMENEZ, MAIRA NADIN","hab_remun":1838434.34,"hab_no_rem":70700.0,"descuentos":628495.89,"empleador":622883.04,"total":2532017.38},{"periodo":"2026-05","centro_costo":"PLAYA","legajo":"77","nombre":"LANDI, DANTE FEDERICO","hab_remun":2236121.46,"hab_no_rem":137559.11,"descuentos":587551.05,"empleador":755710.54,"total":3129391.11},{"periodo":"2026-05","centro_costo":"PLAYA","legajo":"143","nombre":"ROMERO, GABRIEL EDUARDO","hab_remun":1912526.68,"hab_no_rem":137559.11,"descuentos":550491.75,"empleador":647629.87,"total":2697715.66},{"periodo":"2026-05","centro_costo":"PLAYA","legajo":"173","nombre":"ANGELILLO, PABLO JOSE","hab_remun":3199828.54,"hab_no_rem":139982.63,"descuentos":1041616.59,"empleador":1077588.69,"total":4417399.86},{"periodo":"2026-05","centro_costo":"PLAYA","legajo":"179","nombre":"GOMEZ AMARILLA, EIDER","hab_remun":2127829.96,"hab_no_rem":137559.11,"descuentos":521878.16,"empleador":720129.49,"total":2985518.56},{"periodo":"2026-05","centro_costo":"SHOP","legajo":"22","nombre":"PRIETO, ANDREA NOEMI","hab_remun":2302429.94,"hab_no_rem":70700.0,"descuentos":835724.23,"empleador":777983.63,"total":3151113.57},{"periodo":"2026-05","centro_costo":"SHOP","legajo":"23","nombre":"ZALAZAR, ANDREA ALEJANDRA","hab_remun":2675346.94,"hab_no_rem":136873.94,"descuentos":820985.8,"empleador":902537.91,"total":3714758.79},{"periodo":"2026-05","centro_costo":"SHOP","legajo":"24","nombre":"FERREYRA, VALERIA DIANA","hab_remun":2346271.66,"hab_no_rem":70700.0,"descuentos":832246.39,"empleador":793089.0,"total":3210060.66},{"periodo":"2026-05","centro_costo":"SHOP","legajo":"29","nombre":"ESCOBAR, JULIA MABEL","hab_remun":2778068.56,"hab_no_rem":70700.0,"descuentos":647886.66,"empleador":937141.07,"total":3785909.63},{"periodo":"2026-05","centro_costo":"SHOP","legajo":"60","nombre":"RIGONATTO, ADRIEL ORLANDO","hab_remun":1945668.73,"hab_no_rem":70700.0,"descuentos":754660.73,"empleador":658699.3,"total":2675068.03},{"periodo":"2026-05","centro_costo":"SHOP","legajo":"61","nombre":"GARCIA, MAGDALENA ANABELA","hab_remun":1751814.11,"hab_no_rem":70700.0,"descuentos":417582.77,"empleador":593951.88,"total":2416465.99},{"periodo":"2026-05","centro_costo":"SHOP","legajo":"62","nombre":"RIQUELME, ANTONELLA","hab_remun":2007509.39,"hab_no_rem":70700.0,"descuentos":779379.06,"empleador":679354.1,"total":2757563.49},{"periodo":"2026-05","centro_costo":"SHOP","legajo":"78","nombre":"NUÑEZ, CATALINA BEATRIZ","hab_remun":1620222.04,"hab_no_rem":0.0,"descuentos":572651.06,"empleador":542265.14,"total":2162487.18},{"periodo":"2026-05","centro_costo":"TRANSPORTE","legajo":"45","nombre":"BOHOS, SERGIO ADRIAN","hab_remun":3093266.99,"hab_no_rem":1287402.1,"descuentos":865052.4,"empleador":1006324.95,"total":5386994.04},{"periodo":"2026-05","centro_costo":"TRANSPORTE","legajo":"75","nombre":"BORDÓN, CANDIDO DIONICIO","hab_remun":2546097.99,"hab_no_rem":1132433.04,"descuentos":547411.07,"empleador":839985.56,"total":4518516.59},{"periodo":"2026-05","centro_costo":"ADMINISTRACION","legajo":"16","nombre":"FRETE, MYRIAN ESTHER","hab_remun":4450004.62,"hab_no_rem":138600.77,"descuentos":1602150.52,"empleador":1495147.51,"total":6083752.9},{"periodo":"2026-05","centro_costo":"ADMINISTRACION","legajo":"21","nombre":"CAMPELO, GIANINA GISELLE","hab_remun":2120182.29,"hab_no_rem":70700.0,"descuentos":793297.92,"empleador":717028.87,"total":2907911.16},{"periodo":"2026-05","centro_costo":"ADMINISTRACION","legajo":"25","nombre":"GONZALEZ, LILIAN ELIZABETH","hab_remun":1967199.71,"hab_no_rem":138600.77,"descuentos":458111.94,"empleador":666184.8,"total":2771985.28},{"periodo":"2026-05","centro_costo":"ADMINISTRACION","legajo":"74","nombre":"LOPEZ, MARGARITA","hab_remun":2133976.49,"hab_no_rem":138600.77,"descuentos":796470.56,"empleador":721594.1,"total":2994171.36},{"periodo":"2026-05","centro_costo":"GERENCIA","legajo":"50","nombre":"FERRARI, MARCELO ALBERTO","hab_remun":2200000.0,"hab_no_rem":0.0,"descuentos":22000.0,"empleador":99129.62,"total":2299129.62},{"periodo":"2026-05","centro_costo":"GERENCIA","legajo":"51","nombre":"FERRARI, DIEGO EDUARDO","hab_remun":2200000.0,"hab_no_rem":0.0,"descuentos":22000.0,"empleador":99129.62,"total":2299129.62},{"periodo":"2026-06","centro_costo":"PLAYA","legajo":"11","nombre":"SANDOBAL, JUAN ALBERTO","hab_remun":3634738.63,"hab_no_rem":100668.27,"descuentos":1015723.59,"empleador":1218371.67,"total":4953778.57},{"periodo":"2026-06","centro_costo":"PLAYA","legajo":"33","nombre":"PEREZ, MAURO JOAQUIN","hab_remun":3543428.84,"hab_no_rem":100668.27,"descuentos":817388.65,"empleador":1187874.2,"total":4831971.31},{"periodo":"2026-06","centro_costo":"PLAYA","legajo":"55","nombre":"MONGELOS, ELIAS","hab_remun":3111414.14,"hab_no_rem":98196.24,"descuentos":1563466.71,"empleador":1043581.28,"total":4253191.66},{"periodo":"2026-06","centro_costo":"PLAYA","legajo":"57","nombre":"GONZALEZ, GERARDO CESAR","hab_remun":3329190.22,"hab_no_rem":100668.27,"descuentos":907728.13,"empleador":1116318.48,"total":4546176.97},{"periodo":"2026-06","centro_costo":"PLAYA","legajo":"67","nombre":"ALONSO, SANTIAGO","hab_remun":3041967.3,"hab_no_rem":98196.24,"descuentos":702052.47,"empleador":1020386.06,"total":4160549.6},{"periodo":"2026-06","centro_costo":"PLAYA","legajo":"69","nombre":"ANTUNEZ, JONATAN GABRIEL","hab_remun":3212030.6,"hab_no_rem":100668.27,"descuentos":1003102.37,"empleador":1077187.18,"total":4389886.05},{"periodo":"2026-06","centro_costo":"PLAYA","legajo":"70","nombre":"GIMENEZ, VICTOR MANUEL","hab_remun":2946856.56,"hab_no_rem":98196.24,"descuentos":997804.21,"empleador":988619.06,"total":4033671.86},{"periodo":"2026-06","centro_costo":"PLAYA","legajo":"76","nombre":"GIMENEZ, MAIRA NADIN","hab_remun":2622671.38,"hab_no_rem":30000.0,"descuentos":805614.4,"empleador":880341.2,"total":3533012.58},{"periodo":"2026-06","centro_costo":"PLAYA","legajo":"143","nombre":"ROMERO, GABRIEL EDUARDO","hab_remun":3062244.78,"hab_no_rem":98196.24,"descuentos":789700.68,"empleador":1027158.73,"total":4187599.75},{"periodo":"2026-06","centro_costo":"PLAYA","legajo":"173","nombre":"ANGELILLO, PABLO JOSE","hab_remun":4825589.39,"hab_no_rem":100668.27,"descuentos":1412285.54,"empleador":1616115.82,"total":6542373.48},{"periodo":"2026-06","centro_costo":"PLAYA","legajo":"179","nombre":"GOMEZ AMARILLA, EIDER","hab_remun":2965695.95,"hab_no_rem":98196.24,"descuentos":684510.07,"empleador":994911.42,"total":4058803.61},{"periodo":"2026-06","centro_costo":"SHOP","legajo":"22","nombre":"PRIETO, ANDREA NOEMI","hab_remun":3513877.02,"hab_no_rem":30000.0,"descuentos":1117206.77,"empleador":1178003.89,"total":4721880.91},{"periodo":"2026-06","centro_costo":"SHOP","legajo":"23","nombre":"ZALAZAR, ANDREA ALEJANDRA","hab_remun":4015323.61,"hab_no_rem":97497.48,"descuentos":1125924.45,"empleador":1345487.06,"total":5458308.15},{"periodo":"2026-06","centro_costo":"SHOP","legajo":"24","nombre":"FERREYRA, VALERIA DIANA","hab_remun":3475800.15,"hab_no_rem":30000.0,"descuentos":1231118.96,"empleador":1165286.2,"total":4671086.35},{"periodo":"2026-06","centro_costo":"SHOP","legajo":"29","nombre":"ESCOBAR, JULIA MABEL","hab_remun":4141681.58,"hab_no_rem":30000.0,"descuentos":968947.8,"empleador":1387690.6,"total":5559372.18},{"periodo":"2026-06","centro_costo":"SHOP","legajo":"60","nombre":"RIGONATTO, ADRIEL ORLANDO","hab_remun":3010986.8,"hab_no_rem":30000.0,"descuentos":1007282.02,"empleador":1010038.57,"total":4051025.37},{"periodo":"2026-06","centro_costo":"SHOP","legajo":"61","nombre":"GARCIA, MAGDALENA ANABELA","hab_remun":2898491.06,"hab_no_rem":30000.0,"descuentos":776308.0,"empleador":972464.97,"total":3900956.03},{"periodo":"2026-06","centro_costo":"SHOP","legajo":"62","nombre":"RIQUELME, ANTONELLA","hab_remun":2976431.5,"hab_no_rem":30000.0,"descuentos":994981.3,"empleador":998497.09,"total":4004928.59},{"periodo":"2026-06","centro_costo":"SHOP","legajo":"78","nombre":"NUÑEZ, CATALINA BEATRIZ","hab_remun":1938967.39,"hab_no_rem":30000.0,"descuentos":748362.48,"empleador":651984.07,"total":2620951.46},{"periodo":"2026-06","centro_costo":"TRANSPORTE","legajo":"45","nombre":"BOHOS, SERGIO ADRIAN","hab_remun":5211907.92,"hab_no_rem":1351828.11,"descuentos":1320560.21,"empleador":1651032.48,"total":8214768.51},{"periodo":"2026-06","centro_costo":"TRANSPORTE","legajo":"75","nombre":"BORDÓN, CANDIDO DIONICIO","hab_remun":4919486.07,"hab_no_rem":1353943.68,"descuentos":1057689.5,"empleador":1562136.22,"total":7835565.97},{"periodo":"2026-06","centro_costo":"ADMINISTRACION","legajo":"16","nombre":"FRETE, MYRIAN ESTHER","hab_remun":6771581.73,"hab_no_rem":99258.78,"descuentos":2133531.27,"empleador":2266371.4,"total":9137211.91},{"periodo":"2026-06","centro_costo":"ADMINISTRACION","legajo":"21","nombre":"CAMPELO, GIANINA GISELLE","hab_remun":3149606.16,"hab_no_rem":30000.0,"descuentos":1026809.4,"empleador":1056421.45,"total":4236027.61},{"periodo":"2026-06","centro_costo":"ADMINISTRACION","legajo":"25","nombre":"GONZALEZ, LILIAN ELIZABETH","hab_remun":2914424.01,"hab_no_rem":99258.78,"descuentos":672717.52,"empleador":977786.58,"total":3991469.37},{"periodo":"2026-06","centro_costo":"ADMINISTRACION","legajo":"74","nombre":"LOPEZ, MARGARITA","hab_remun":3228675.1,"hab_no_rem":99258.78,"descuentos":1044995.26,"empleador":1082746.45,"total":4410680.33},{"periodo":"2026-06","centro_costo":"GERENCIA","legajo":"50","nombre":"FERRARI, MARCELO ALBERTO","hab_remun":3300000.0,"hab_no_rem":0.0,"descuentos":33000.0,"empleador":147529.62,"total":3447529.62},{"periodo":"2026-06","centro_costo":"GERENCIA","legajo":"51","nombre":"FERRARI, DIEGO EDUARDO","hab_remun":3300000.0,"hab_no_rem":0.0,"descuentos":33000.0,"empleador":147529.62,"total":3447529.62},{"periodo":"2026-07","centro_costo":"PLAYA","legajo":"11","nombre":"SANDOBAL, JUAN ALBERTO","hab_remun":2432617.78,"hab_no_rem":72018.27,"descuentos":941491.94,"empleador":813563.31,"total":3318199.36},{"periodo":"2026-07","centro_costo":"PLAYA","legajo":"33","nombre":"PEREZ, MAURO JOAQUIN","hab_remun":2336593.4,"hab_no_rem":72018.27,"descuentos":537416.46,"empleador":781491.16,"total":3190102.83},{"periodo":"2026-07","centro_costo":"PLAYA","legajo":"55","nombre":"MONGELOS, ELIAS","hab_remun":1962749.86,"hab_no_rem":69546.24,"descuentos":1208795.86,"empleador":656627.42,"total":2688923.52},{"periodo":"2026-07","centro_costo":"PLAYA","legajo":"57","nombre":"GONZALEZ, GERARDO CESAR","hab_remun":2208560.89,"hab_no_rem":72018.27,"descuentos":875689.24,"empleador":738728.3,"total":3019307.46},{"periodo":"2026-07","centro_costo":"PLAYA","legajo":"67","nombre":"ALONSO, SANTIAGO","hab_remun":1993659.3,"hab_no_rem":69546.24,"descuentos":533490.07,"empleador":666951.17,"total":2730156.71},{"periodo":"2026-07","centro_costo":"PLAYA","legajo":"69","nombre":"ANTUNEZ, JONATAN GABRIEL","hab_remun":2112536.5,"hab_no_rem":72018.27,"descuentos":939657.02,"empleador":706656.16,"total":2891210.93},{"periodo":"2026-07","centro_costo":"PLAYA","legajo":"70","nombre":"GIMENEZ, VICTOR MANUEL","hab_remun":1900930.97,"hab_no_rem":69546.24,"descuentos":727061.06,"empleador":635979.9,"total":2606457.11},{"periodo":"2026-07","centro_costo":"PLAYA","legajo":"76","nombre":"GIMENEZ, MAIRA NADIN","hab_remun":1803824.4,"hab_no_rem":0.0,"descuentos":414879.59,"empleador":603546.32,"total":2407370.72},{"periodo":"2026-07","centro_costo":"PLAYA","legajo":"143","nombre":"ROMERO, GABRIEL EDUARDO","hab_remun":1993659.3,"hab_no_rem":69546.24,"descuentos":602307.95,"empleador":667035.22,"total":2730240.76},{"periodo":"2026-07","centro_costo":"PLAYA","legajo":"173","nombre":"ANGELILLO, PABLO JOSE","hab_remun":3355518.89,"hab_no_rem":72018.27,"descuentos":1071769.36,"empleador":1122106.42,"total":4549643.58},{"periodo":"2026-07","centro_costo":"PLAYA","legajo":"179","nombre":"GOMEZ AMARILLA, EIDER","hab_remun":1962749.86,"hab_no_rem":69546.24,"descuentos":451432.48,"empleador":656627.42,"total":2688923.52},{"periodo":"2026-07","centro_costo":"SHOP","legajo":"22","nombre":"PRIETO, ANDREA NOEMI","hab_remun":2310214.32,"hab_no_rem":0.0,"descuentos":963006.4,"empleador":772680.55,"total":3082894.87},{"periodo":"2026-07","centro_costo":"SHOP","legajo":"23","nombre":"ZALAZAR, ANDREA ALEJANDRA","hab_remun":2743698.25,"hab_no_rem":68847.48,"descuentos":631050.6,"empleador":917674.3,"total":3730220.03},{"periodo":"2026-07","centro_costo":"SHOP","legajo":"24","nombre":"FERREYRA, VALERIA DIANA","hab_remun":2249016.59,"hab_no_rem":0.0,"descuentos":792398.35,"empleador":752240.51,"total":3001257.1},{"periodo":"2026-07","centro_costo":"SHOP","legajo":"29","nombre":"ESCOBAR, JULIA MABEL","hab_remun":2707999.57,"hab_no_rem":0.0,"descuentos":708661.03,"empleador":905540.82,"total":3613540.39},{"periodo":"2026-07","centro_costo":"SHOP","legajo":"60","nombre":"RIGONATTO, ADRIEL ORLANDO","hab_remun":2004225.67,"hab_no_rem":0.0,"descuentos":885171.05,"empleador":670480.33,"total":2674706.0},{"periodo":"2026-07","centro_costo":"SHOP","legajo":"61","nombre":"GARCIA, MAGDALENA ANABELA","hab_remun":1897129.64,"hab_no_rem":0.0,"descuentos":849754.97,"empleador":634710.25,"total":2531839.89},{"periodo":"2026-07","centro_costo":"SHOP","legajo":"62","nombre":"RIQUELME, ANTONELLA","hab_remun":1973626.8,"hab_no_rem":0.0,"descuentos":790994.27,"empleador":660260.33,"total":2633887.13},{"periodo":"2026-07","centro_costo":"SHOP","legajo":"78","nombre":"NUÑEZ, CATALINA BEATRIZ","hab_remun":1626004.1,"hab_no_rem":0.0,"descuentos":773980.93,"empleador":544154.33,"total":2170158.43},{"periodo":"2026-07","centro_costo":"TRANSPORTE","legajo":"45","nombre":"BOHOS, SERGIO ADRIAN","hab_remun":3066358.94,"hab_no_rem":1213496.8,"descuentos":659267.17,"empleador":1000502.42,"total":5280358.16},{"periodo":"2026-07","centro_costo":"TRANSPORTE","legajo":"75","nombre":"BORDÓN, CANDIDO DIONICIO","hab_remun":2913727.45,"hab_no_rem":1199080.8,"descuentos":626451.39,"empleador":954102.45,"total":5066910.7},{"periodo":"2026-07","centro_costo":"ADMINISTRACION","legajo":"16","nombre":"FRETE, MYRIAN ESTHER","hab_remun":4518963.87,"hab_no_rem":70608.78,"descuentos":1737764.3,"empleador":1510402.91,"total":6099975.56},{"periodo":"2026-07","centro_costo":"ADMINISTRACION","legajo":"21","nombre":"CAMPELO, GIANINA GISELLE","hab_remun":3750635.41,"hab_no_rem":0.0,"descuentos":1662646.12,"empleador":1254453.54,"total":5005088.95},{"periodo":"2026-07","centro_costo":"ADMINISTRACION","legajo":"25","nombre":"GONZALEZ, LILIAN ELIZABETH","hab_remun":3185241.91,"hab_no_rem":70608.78,"descuentos":732605.65,"empleador":1064939.77,"total":4320790.46},{"periodo":"2026-07","centro_costo":"ADMINISTRACION","legajo":"74","nombre":"LOPEZ, MARGARITA","hab_remun":2165336.85,"hab_no_rem":70608.78,"descuentos":898027.49,"empleador":724291.48,"total":2960237.11},{"periodo":"2026-07","centro_costo":"GERENCIA","legajo":"50","nombre":"FERRARI, MARCELO ALBERTO","hab_remun":3800000.0,"hab_no_rem":0.0,"descuentos":38000.0,"empleador":169529.62,"total":3969529.62},{"periodo":"2026-07","centro_costo":"GERENCIA","legajo":"51","nombre":"FERRARI, DIEGO EDUARDO","hab_remun":3800000.0,"hab_no_rem":0.0,"descuentos":38000.0,"empleador":169529.62,"total":3969529.62},{"periodo":"2026-08","centro_costo":"PLAYA","legajo":"11","nombre":"SANDOBAL, JUAN ALBERTO","hab_remun":2416613.72,"hab_no_rem":72018.27,"descuentos":863617.93,"empleador":808217.92,"total":3296849.91},{"periodo":"2026-08","centro_costo":"PLAYA","legajo":"33","nombre":"PEREZ, MAURO JOAQUIN","hab_remun":2336593.4,"hab_no_rem":72018.27,"descuentos":537416.46,"empleador":781491.16,"total":3190102.83},{"periodo":"2026-08","centro_costo":"PLAYA","legajo":"55","nombre":"MONGELOS, ELIAS","hab_remun":2086387.64,"hab_no_rem":69546.24,"descuentos":1282520.45,"empleador":697922.44,"total":2853856.32},{"periodo":"2026-08","centro_costo":"PLAYA","legajo":"57","nombre":"GONZALEZ, GERARDO CESAR","hab_remun":2272577.15,"hab_no_rem":72018.27,"descuentos":522692.73,"empleador":760109.72,"total":3104705.14},{"periodo":"2026-08","centro_costo":"PLAYA","legajo":"67","nombre":"ALONSO, SANTIAGO","hab_remun":2055478.19,"hab_no_rem":69546.24,"descuentos":472759.99,"empleador":687598.67,"total":2812623.1},{"periodo":"2026-08","centro_costo":"PLAYA","legajo":"69","nombre":"ANTUNEZ, JONATAN GABRIEL","hab_remun":2192556.82,"hab_no_rem":72018.27,"descuentos":908359.77,"empleador":733382.96,"total":2997958.05},{"periodo":"2026-08","centro_costo":"PLAYA","legajo":"70","nombre":"GIMENEZ, VICTOR MANUEL","hab_remun":1962749.86,"hab_no_rem":69546.24,"descuentos":713181.63,"empleador":656627.42,"total":2688923.52},{"periodo":"2026-08","centro_costo":"PLAYA","legajo":"76","nombre":"GIMENEZ, MAIRA NADIN","hab_remun":1865493.61,"hab_no_rem":0.0,"descuentos":729063.55,"empleador":624143.84,"total":2489637.45},{"periodo":"2026-08","centro_costo":"PLAYA","legajo":"143","nombre":"ROMERO, GABRIEL EDUARDO","hab_remun":1993659.3,"hab_no_rem":69546.24,"descuentos":491757.66,"empleador":666951.17,"total":2730156.71},{"periodo":"2026-08","centro_costo":"PLAYA","legajo":"173","nombre":"ANGELILLO, PABLO JOSE","hab_remun":3344849.51,"hab_no_rem":72018.27,"descuentos":1069315.42,"empleador":1118248.71,"total":4535116.49},{"periodo":"2026-08","centro_costo":"PLAYA","legajo":"179","nombre":"GOMEZ AMARILLA, EIDER","hab_remun":2024568.75,"hab_no_rem":69546.24,"descuentos":465650.81,"empleador":677274.95,"total":2771389.94},{"periodo":"2026-08","centro_costo":"SHOP","legajo":"22","nombre":"PRIETO, ANDREA NOEMI","hab_remun":2310214.32,"hab_no_rem":0.0,"descuentos":946496.67,"empleador":772680.55,"total":3082894.87},{"periodo":"2026-08","centro_costo":"SHOP","legajo":"23","nombre":"ZALAZAR, ANDREA ALEJANDRA","hab_remun":2713099.38,"hab_no_rem":68847.48,"descuentos":624012.84,"empleador":907328.21,"total":3689275.07},{"periodo":"2026-08","centro_costo":"SHOP","legajo":"24","nombre":"FERREYRA, VALERIA DIANA","hab_remun":2310214.32,"hab_no_rem":0.0,"descuentos":833673.42,"empleador":772680.55,"total":3082894.87},{"periodo":"2026-08","centro_costo":"SHOP","legajo":"29","nombre":"ESCOBAR, JULIA MABEL","hab_remun":2769197.3,"hab_no_rem":0.0,"descuentos":657561.75,"empleador":925980.88,"total":3695178.18},{"periodo":"2026-08","centro_costo":"SHOP","legajo":"60","nombre":"RIGONATTO, ADRIEL ORLANDO","hab_remun":2004225.67,"hab_no_rem":0.0,"descuentos":873828.29,"empleador":670480.33,"total":2674706.0},{"periodo":"2026-08","centro_costo":"SHOP","legajo":"61","nombre":"GARCIA, MAGDALENA ANABELA","hab_remun":1958327.37,"hab_no_rem":0.0,"descuentos":862571.66,"empleador":655150.3,"total":2613477.67},{"periodo":"2026-08","centro_costo":"SHOP","legajo":"62","nombre":"RIQUELME, ANTONELLA","hab_remun":1973626.8,"hab_no_rem":0.0,"descuentos":766888.54,"empleador":660470.44,"total":2634097.24},{"periodo":"2026-08","centro_costo":"SHOP","legajo":"78","nombre":"NUÑEZ, CATALINA BEATRIZ","hab_remun":1746448.84,"hab_no_rem":0.0,"descuentos":801683.25,"empleador":584382.88,"total":2330831.72},{"periodo":"2026-08","centro_costo":"TRANSPORTE","legajo":"45","nombre":"BOHOS, SERGIO ADRIAN","hab_remun":3307222.21,"hab_no_rem":1398276.53,"descuentos":911052.77,"empleador":1074360.85,"total":5779859.59},{"periodo":"2026-08","centro_costo":"TRANSPORTE","legajo":"75","nombre":"BORDÓN, CANDIDO DIONICIO","hab_remun":3297235.72,"hab_no_rem":1521362.35,"descuentos":708905.68,"empleador":1071324.96,"total":5889923.03},{"periodo":"2026-08","centro_costo":"ADMINISTRACION","legajo":"16","nombre":"FRETE, MYRIAN ESTHER","hab_remun":4518963.87,"hab_no_rem":70608.78,"descuentos":1439361.71,"empleador":1510402.91,"total":6099975.56},{"periodo":"2026-08","centro_costo":"ADMINISTRACION","legajo":"21","nombre":"CAMPELO, GIANINA GISELLE","hab_remun":2998520.8,"hab_no_rem":0.0,"descuentos":1653764.43,"empleador":1002785.03,"total":4001305.83},{"periodo":"2026-08","centro_costo":"ADMINISTRACION","legajo":"25","nombre":"GONZALEZ, LILIAN ELIZABETH","hab_remun":2275172.78,"hab_no_rem":70608.78,"descuentos":523289.74,"empleador":760976.7,"total":3106758.26},{"periodo":"2026-08","centro_costo":"ADMINISTRACION","legajo":"74","nombre":"LOPEZ, MARGARITA","hab_remun":2165336.85,"hab_no_rem":70608.78,"descuentos":898027.49,"empleador":724291.48,"total":2960237.11},{"periodo":"2026-08","centro_costo":"GERENCIA","legajo":"50","nombre":"FERRARI, MARCELO ALBERTO","hab_remun":3800000.0,"hab_no_rem":0.0,"descuentos":38000.0,"empleador":169529.62,"total":3969529.62},{"periodo":"2026-08","centro_costo":"GERENCIA","legajo":"51","nombre":"FERRARI, DIEGO EDUARDO","hab_remun":3800000.0,"hab_no_rem":0.0,"descuentos":332000.0,"empleador":169529.62,"total":3969529.62}]
+;
+(function(){
+
+  const FONT = "Inter, sans-serif";
+  Chart.defaults.font.family = FONT;
+  Chart.defaults.font.size = 11.5;
+  Chart.defaults.color = '#6B667A';
+  Chart.defaults.borderColor = 'rgba(33,31,43,0.06)';
+
+  RAW.forEach(d=>{ d.haberes = d.hab_remun + d.hab_no_rem; });
+
+  const CC_PALETTE = ['#1D6FA5','#C8721A','#1E8A5F','#9C6ADE','#C1443C'];
+  const ALL_PERIODS = [...new Set(RAW.map(d=>d.periodo))].sort();
+  const ALL_CC = [...new Set(RAW.map(d=>d.centro_costo))].sort();
+  const CC_COLOR = {};
+  ALL_CC.forEach((cc,i)=>{ CC_COLOR[cc] = CC_PALETTE[i % CC_PALETTE.length]; });
+
+  const MES_NOMBRES = {'01':'ene','02':'feb','03':'mar','04':'abr','05':'may','06':'jun','07':'jul','08':'ago','09':'sep','10':'oct','11':'nov','12':'dic'};
+  function fmtPeriodo(p){ const [y,m] = p.split('-'); return MES_NOMBRES[m]+' '+y.slice(2); }
+  function fmtNum(n,d=0){ return n.toLocaleString('es-AR',{minimumFractionDigits:d, maximumFractionDigits:d}); }
+  function fmtMoney(n){ return '$'+fmtNum(n,0); }
+  function ccShort(cc){ return cc.length>16 ? cc.slice(0,14)+'…' : cc; }
+
+  // ---------- state ----------
+  const state = {
+    desde: ALL_PERIODS[0],
+    hasta: ALL_PERIODS[ALL_PERIODS.length-1],
+    centrosCosto: new Set(ALL_CC),
+    metric: 'legajos',
+    breakdown: 'total',
+    nominaSearch: ''
+  };
+
+  const METRIC_LABEL = { legajos:'Legajos', haberes:'Haberes', empleador:'Contribuciones patronales', total:'Total (haberes + empleador)' };
+  const METRIC_FMT = { legajos: v=>fmtNum(v,0), haberes: fmtMoney, empleador: fmtMoney, total: fmtMoney };
+
+  // ---------- period selects ----------
+  const fDesde = document.getElementById('fDesde');
+  const fHasta = document.getElementById('fHasta');
+  ALL_PERIODS.forEach(p=>{
+    const o1 = document.createElement('option'); o1.value=p; o1.textContent=fmtPeriodo(p); fDesde.appendChild(o1);
+    const o2 = document.createElement('option'); o2.value=p; o2.textContent=fmtPeriodo(p); fHasta.appendChild(o2);
+  });
+  fDesde.value = state.desde; fHasta.value = state.hasta;
+  fDesde.addEventListener('change', ()=>{
+    state.desde = fDesde.value;
+    if (ALL_PERIODS.indexOf(state.desde) > ALL_PERIODS.indexOf(state.hasta)){ state.hasta = state.desde; fHasta.value = state.hasta; }
+    render();
+  });
+  fHasta.addEventListener('change', ()=>{
+    state.hasta = fHasta.value;
+    if (ALL_PERIODS.indexOf(state.hasta) < ALL_PERIODS.indexOf(state.desde)){ state.desde = state.hasta; fDesde.value = state.desde; }
+    render();
+  });
+
+  // ---------- centro de costo chips (isolate-on-click) ----------
+  const ccChipMap = {};
+  const fCCEl = document.getElementById('fCC');
+  ALL_CC.forEach(cc=>{
+    const chip = document.createElement('button');
+    chip.className = 'chip active';
+    chip.innerHTML = `<span class="dot" style="background:${CC_COLOR[cc]}"></span>${ccShort(cc)}`;
+    chip.title = cc;
+    chip.addEventListener('click', ()=> toggleCC(cc));
+    ccChipMap[cc] = chip;
+    fCCEl.appendChild(chip);
+  });
+
+  function syncCCChips(){
+    ALL_CC.forEach(cc=>{
+      if (state.centrosCosto.has(cc)) ccChipMap[cc].classList.add('active');
+      else ccChipMap[cc].classList.remove('active');
+    });
+  }
+
+  function toggleCC(cc){
+    if (state.centrosCosto.size === ALL_CC.length){
+      state.centrosCosto = new Set([cc]);
+    } else if (state.centrosCosto.size === 1 && state.centrosCosto.has(cc)){
+      state.centrosCosto = new Set(ALL_CC);
+    } else if (state.centrosCosto.has(cc)){
+      state.centrosCosto.delete(cc);
+      if (state.centrosCosto.size === 0) state.centrosCosto = new Set(ALL_CC);
+    } else {
+      state.centrosCosto.add(cc);
+    }
+    syncCCChips();
+    nominaPage = 0;
+    render();
+  }
+
+  function isolateCC(cc){
+    state.centrosCosto = new Set([cc]);
+    syncCCChips();
+    nominaPage = 0;
+    render();
+  }
+
+  function drillToPeriod(per){
+    state.desde = per; state.hasta = per;
+    fDesde.value = per; fHasta.value = per;
+    render();
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    state.desde = ALL_PERIODS[0]; state.hasta = ALL_PERIODS[ALL_PERIODS.length-1];
+    state.centrosCosto = new Set(ALL_CC);
+    state.nominaSearch = '';
+    fDesde.value = state.desde; fHasta.value = state.hasta;
+    document.getElementById('fNomina').value = '';
+    syncCCChips();
+    nominaPage = 0;
+    render();
+  });
+
+  document.getElementById('metricToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.metric = btn.dataset.metric;
+      document.getElementById('metricToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+  document.getElementById('breakdownToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.breakdown = btn.dataset.bd;
+      document.getElementById('breakdownToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+
+  let nominaSearchTimer = null;
+  document.getElementById('fNomina').addEventListener('input', (e)=>{
+    state.nominaSearch = e.target.value.trim().toLowerCase();
+    nominaPage = 0;
+    clearTimeout(nominaSearchTimer);
+    nominaSearchTimer = setTimeout(render, 150);
+  });
+
+  // ---------- data helpers ----------
+  function periodsInRange(){
+    const i0 = ALL_PERIODS.indexOf(state.desde), i1 = ALL_PERIODS.indexOf(state.hasta);
+    return ALL_PERIODS.slice(i0, i1+1);
+  }
+
+  function getFiltered(){
+    const periods = new Set(periodsInRange());
+    return RAW.filter(d=> periods.has(d.periodo) && state.centrosCosto.has(d.centro_costo));
+  }
+
+  function aggByCC(rows){
+    const map = {};
+    rows.forEach(d=>{
+      if (!map[d.centro_costo]) map[d.centro_costo] = { legajos:0, haberes:0, empleador:0, total:0 };
+      const g = map[d.centro_costo];
+      g.legajos += 1; g.haberes += d.haberes; g.empleador += d.empleador; g.total += d.total;
+    });
+    return map;
+  }
+
+  function totalsForRows(rows){
+    return rows.reduce((acc,d)=>{ acc.legajos+=1; acc.haberes+=d.haberes; acc.empleador+=d.empleador; acc.total+=d.total; return acc; }, {legajos:0, haberes:0, empleador:0, total:0});
+  }
+
+  // ---------- KPIs ----------
+  function renderKPIs(filtered){
+    const kpiRow = document.getElementById('kpiRow');
+    const current = totalsForRows(filtered);
+    const periods = periodsInRange();
+    const rangeLabel = periods.length>1 ? `${fmtPeriodo(periods[0])} – ${fmtPeriodo(periods[periods.length-1])}` : fmtPeriodo(periods[0]||state.desde);
+
+    const cards = [
+      { label: `Legajos — ${rangeLabel}`, value: fmtNum(current.legajos,0) },
+      { label: 'Haberes (remun. + no remun.)', value: fmtMoney(current.haberes) },
+      { label: 'Contribuciones patronales', value: fmtMoney(current.empleador) },
+      { label: 'Total (haberes + empleador)', value: fmtMoney(current.total) },
+    ];
+    kpiRow.innerHTML = cards.map(c=>`
+      <div class="kpi-card">
+        <div class="kpi-label">${c.label}</div>
+        <div class="kpi-value tabular">${c.value}</div>
+      </div>
+    `).join('');
+  }
+
+  // ---------- charts ----------
+  let charts = {};
+  function destroyCharts(){ Object.values(charts).forEach(c=>c && c.destroy()); charts = {}; }
+  const gridColor = 'rgba(33,31,43,0.06)';
+  const tickColor = '#8A8698';
+  function tooltipBase(){
+    return { backgroundColor:'#211F2B', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, titleColor:'#fff', bodyColor:'#D8D5E2',
+             padding:10, titleFont:{family:FONT, weight:'600', size:12}, bodyFont:{family:FONT, size:11.5}, boxPadding:4 };
+  }
+  function pointerCursor(evt, elements){ evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
+
+  function buildTrend(filtered){
+    const ctx = document.getElementById('chartTrend');
+    const sub = document.getElementById('trendSub');
+    const metric = state.metric;
+    const fmt = METRIC_FMT[metric];
+    const periods = periodsInRange();
+
+    if (state.breakdown === 'total'){
+      sub.textContent = `${METRIC_LABEL[metric]} — total de los centros de costo seleccionados`;
+      const data = periods.map(p=> totalsForRows(filtered.filter(d=>d.periodo===p))[metric]);
+      charts.trend = new Chart(ctx, {
+        type:'line',
+        data:{ labels: periods.map(fmtPeriodo), datasets:[{
+          label: METRIC_LABEL[metric], data, borderColor:'#1D6FA5', backgroundColor:'rgba(29,111,165,0.12)',
+          fill:true, tension:0.3, pointRadius:3, pointHoverRadius:6, borderWidth:2.5
+        }]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          onHover: pointerCursor,
+          onClick: (evt, elements) => { if (elements.length) drillToPeriod(periods[elements[0].index]); },
+          plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${fmt(c.parsed.y)}`, afterLabel:()=>'Clic para ver solo este mes' } } },
+          scales:{
+            x:{ grid:{color:gridColor}, ticks:{color:tickColor} },
+            y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>metric==='legajos'?fmtNum(v):'$'+fmtNum(v/1e6,1)+'M'}, beginAtZero:true }
+          }
+        }
+      });
+    } else {
+      const ccList = [...state.centrosCosto];
+      sub.textContent = `${METRIC_LABEL[metric]} — por centro de costo`;
+      const datasets = ccList.map(cc=>({
+        label: ccShort(cc),
+        data: periods.map(p=>{
+          const rows = filtered.filter(d=>d.periodo===p && d.centro_costo===cc);
+          return rows.length ? totalsForRows(rows)[metric] : 0;
+        }),
+        borderColor: CC_COLOR[cc], backgroundColor: CC_COLOR[cc], tension:0.3, pointRadius:1.5, pointHoverRadius:5, borderWidth:1.8, spanGaps:true
+      }));
+      charts.trend = new Chart(ctx, {
+        type:'line',
+        data:{ labels: periods.map(fmtPeriodo), datasets },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          interaction:{ mode:'index', intersect:false },
+          onHover: pointerCursor,
+          onClick: (evt, elements) => { if (elements.length) isolateCC(ccList[elements[0].datasetIndex]); },
+          plugins:{
+            legend:{ position:'bottom', labels:{ boxWidth:8, boxHeight:8, usePointStyle:true, pointStyle:'circle', padding:8, font:{size:10} }, onClick:(evt,item)=> isolateCC(ccList[item.datasetIndex]) },
+            tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmt(c.parsed.y)}` } }
+          },
+          scales:{
+            x:{ grid:{color:gridColor}, ticks:{color:tickColor} },
+            y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>metric==='legajos'?fmtNum(v):'$'+fmtNum(v/1e6,1)+'M'}, beginAtZero:true }
+          }
+        }
+      });
+    }
+  }
+
+  function buildRanking(filtered){
+    const ctx = document.getElementById('chartRanking');
+    const sub = document.getElementById('rankingSub');
+    const metric = state.metric;
+    const fmt = METRIC_FMT[metric];
+    const periods = periodsInRange();
+    sub.textContent = `${METRIC_LABEL[metric]}, ${periods.length>1 ? fmtPeriodo(periods[0])+' – '+fmtPeriodo(periods[periods.length-1]) : fmtPeriodo(periods[0])}`;
+
+    const agg = aggByCC(filtered);
+    const entries = Object.entries(agg).map(([cc,v])=>({cc, val:v[metric]})).sort((a,b)=>b.val-a.val);
+
+    charts.ranking = new Chart(ctx, {
+      type:'bar',
+      data:{ labels: entries.map(e=>ccShort(e.cc)), datasets:[{ data: entries.map(e=>e.val), backgroundColor: entries.map(e=>CC_COLOR[e.cc]), borderRadius:4, maxBarThickness:22 }] },
+      options:{
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        onHover: pointerCursor,
+        onClick: (evt, elements) => { if (elements.length) isolateCC(entries[elements[0].index].cc); },
+        plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${fmt(c.parsed.x)}`, afterLabel:()=>'Clic para aislar' } } },
+        scales:{
+          x:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>metric==='legajos'?fmtNum(v):'$'+fmtNum(v/1e6,1)+'M'}, beginAtZero:true },
+          y:{ grid:{display:false}, ticks:{color:tickColor, font:{size:10.5}} }
+        }
+      }
+    });
+  }
+
+  function buildStruct(filtered){
+    const ctx = document.getElementById('chartStruct');
+    const sub = document.getElementById('structSub');
+    const periods = periodsInRange();
+    sub.textContent = `Haberes vs. contribuciones patronales — ${periods.length>1 ? fmtPeriodo(periods[0])+' – '+fmtPeriodo(periods[periods.length-1]) : fmtPeriodo(periods[0])}`;
+
+    const agg = aggByCC(filtered);
+    const entries = Object.entries(agg).sort((a,b)=>b[1].total-a[1].total);
+    const ccList = entries.map(([cc])=>cc);
+
+    charts.struct = new Chart(ctx, {
+      type:'bar',
+      data:{
+        labels: ccList.map(ccShort),
+        datasets:[
+          { label:'Haberes', data: entries.map(([,v])=>v.haberes), backgroundColor:'#1D6FA5', stack:'s', borderRadius:3, maxBarThickness:34 },
+          { label:'Contribuciones patronales', data: entries.map(([,v])=>v.empleador), backgroundColor:'#C8721A', stack:'s', borderRadius:3, maxBarThickness:34 }
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        onHover: pointerCursor,
+        onClick: (evt, elements) => { if (elements.length) isolateCC(ccList[elements[0].index]); },
+        plugins:{
+          legend:{ position:'bottom', labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle:'rect', padding:14 } },
+          tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${fmtMoney(c.parsed.y)}`, afterLabel:()=>'Clic para aislar este centro de costo' } }
+        },
+        scales:{
+          x:{ grid:{display:false}, ticks:{color:tickColor, maxRotation:0, autoSkip:false, font:{size:10}}, stacked:true },
+          y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>'$'+fmtNum(v/1e6,1)+'M'}, stacked:true, beginAtZero:true }
+        }
+      }
+    });
+  }
+
+  // ---------- cost-center table ----------
+  let ccSort = { col:'total', dir:'desc' };
+  function renderCCTable(filtered){
+    const sub = document.getElementById('tableSub');
+    const periods = periodsInRange();
+    sub.textContent = periods.length>1 ? `${fmtPeriodo(periods[0])} – ${fmtPeriodo(periods[periods.length-1])}` : fmtPeriodo(periods[0]);
+
+    const agg = aggByCC(filtered);
+    let rows = Object.entries(agg).map(([cc,v])=>({ centro_costo:cc, ...v }));
+    rows.sort((a,b)=>{
+      let av=a[ccSort.col], bv=b[ccSort.col];
+      if (typeof av === 'string'){ av=av.toLowerCase(); bv=bv.toLowerCase(); }
+      if (av<bv) return ccSort.dir==='asc'?-1:1;
+      if (av>bv) return ccSort.dir==='asc'?1:-1;
+      return 0;
+    });
+
+    const table = document.getElementById('ccTable');
+    const cols = [ {k:'centro_costo', label:'Centro de costo'}, {k:'legajos', label:'Legajos'}, {k:'haberes', label:'Haberes'}, {k:'empleador', label:'Contribuciones patronales'}, {k:'total', label:'Total'} ];
+    table.querySelector('thead').innerHTML = '<tr>' + cols.map(c=>{
+      const arrow = ccSort.col===c.k ? (ccSort.dir==='asc'?' ▲':' ▼') : '';
+      return `<th data-col="${c.k}">${c.label}${arrow}</th>`;
+    }).join('') + '</tr>';
+
+    table.querySelector('tbody').innerHTML = rows.map(r=>`
+      <tr data-cc="${r.centro_costo}" style="cursor:pointer;">
+        <td style="border-left:3px solid ${CC_COLOR[r.centro_costo]}; padding-left:9px;">${r.centro_costo}</td>
+        <td class="tabular">${fmtNum(r.legajos,0)}</td>
+        <td class="tabular">${fmtMoney(r.haberes)}</td>
+        <td class="tabular">${fmtMoney(r.empleador)}</td>
+        <td class="tabular">${fmtMoney(r.total)}</td>
+      </tr>
+    `).join('');
+
+    table.querySelectorAll('th').forEach(th=>{
+      th.addEventListener('click', ()=>{
+        const col = th.dataset.col;
+        if (ccSort.col===col){ ccSort.dir = ccSort.dir==='asc'?'desc':'asc'; } else { ccSort.col=col; ccSort.dir='desc'; }
+        renderCCTable(getFiltered());
+      });
+    });
+    table.querySelectorAll('tbody tr').forEach(tr=>{
+      tr.addEventListener('click', ()=> isolateCC(tr.dataset.cc));
+    });
+  }
+
+  // ---------- nomina (employee roster) ----------
+  let nominaPage = 0;
+  const NOMINA_PAGE_SIZE = 15;
+  let nominaSort = { col:'total', dir:'desc' };
+
+  function aggregateNomina(filtered){
+    const map = {};
+    filtered.forEach(d=>{
+      const key = d.legajo+'|'+d.nombre+'|'+d.centro_costo;
+      if (!map[key]) map[key] = { legajo:d.legajo, nombre:d.nombre, centro_costo:d.centro_costo, haberes:0, empleador:0, total:0, meses:0 };
+      const g = map[key];
+      g.haberes += d.haberes; g.empleador += d.empleador; g.total += d.total; g.meses += 1;
+    });
+    return Object.values(map);
+  }
+
+  function renderNomina(filtered){
+    let rows = aggregateNomina(filtered);
+    if (state.nominaSearch){
+      rows = rows.filter(r => (r.nombre+' '+r.legajo).toLowerCase().includes(state.nominaSearch));
+    }
+    rows.sort((a,b)=>{
+      let av=a[nominaSort.col], bv=b[nominaSort.col];
+      if (typeof av === 'string'){ av=av.toLowerCase(); bv=bv.toLowerCase(); }
+      if (av<bv) return nominaSort.dir==='asc'?-1:1;
+      if (av>bv) return nominaSort.dir==='asc'?1:-1;
+      return 0;
+    });
+
+    const totalRows = rows.length;
+    const totalPages = Math.max(1, Math.ceil(totalRows/NOMINA_PAGE_SIZE));
+    if (nominaPage >= totalPages) nominaPage = totalPages-1;
+    if (nominaPage < 0) nominaPage = 0;
+    const pageRows = rows.slice(nominaPage*NOMINA_PAGE_SIZE, nominaPage*NOMINA_PAGE_SIZE+NOMINA_PAGE_SIZE);
+
+    const table = document.getElementById('nominaTable');
+    const cols = [ {k:'legajo', label:'Legajo'}, {k:'nombre', label:'Nombre'}, {k:'centro_costo', label:'Centro de costo'}, {k:'haberes', label:'Haberes'}, {k:'empleador', label:'Contribuciones'}, {k:'total', label:'Total'}, {k:'meses', label:'Meses'} ];
+    table.querySelector('thead').innerHTML = '<tr>' + cols.map(c=>{
+      const arrow = nominaSort.col===c.k ? (nominaSort.dir==='asc'?' ▲':' ▼') : '';
+      return `<th data-col="${c.k}">${c.label}${arrow}</th>`;
+    }).join('') + '</tr>';
+
+    if (!pageRows.length){
+      table.querySelector('tbody').innerHTML = `<tr><td colspan="7"><div class="empty-state">No hay empleados que coincidan con los filtros actuales.</div></td></tr>`;
+    } else {
+      table.querySelector('tbody').innerHTML = pageRows.map(r=>`
+        <tr>
+          <td class="tabular">${r.legajo}</td>
+          <td>${r.nombre}</td>
+          <td><span style="display:inline-flex; align-items:center; gap:6px;"><span style="width:7px;height:7px;border-radius:50%;background:${CC_COLOR[r.centro_costo]};display:inline-block;"></span>${r.centro_costo}</span></td>
+          <td class="tabular">${fmtMoney(r.haberes)}</td>
+          <td class="tabular">${fmtMoney(r.empleador)}</td>
+          <td class="tabular">${fmtMoney(r.total)}</td>
+          <td class="tabular">${r.meses}</td>
+        </tr>
+      `).join('');
+    }
+
+    table.querySelectorAll('th').forEach(th=>{
+      th.addEventListener('click', ()=>{
+        const col = th.dataset.col;
+        if (nominaSort.col===col){ nominaSort.dir = nominaSort.dir==='asc'?'desc':'asc'; } else { nominaSort.col=col; nominaSort.dir='desc'; }
+        renderNomina(getFiltered());
+      });
+    });
+
+    document.getElementById('nominaInfo').textContent = totalRows ? `Mostrando ${nominaPage*NOMINA_PAGE_SIZE+1}–${Math.min(totalRows,(nominaPage+1)*NOMINA_PAGE_SIZE)} de ${totalRows} empleados` : 'Sin resultados';
+    document.getElementById('nominaPrev').disabled = nominaPage<=0;
+    document.getElementById('nominaNext').disabled = nominaPage>=totalPages-1;
+
+    const sub = document.getElementById('nominaSub');
+    const periods = periodsInRange();
+    sub.textContent = `${periods.length>1 ? fmtPeriodo(periods[0])+' – '+fmtPeriodo(periods[periods.length-1]) : fmtPeriodo(periods[0])} · ${state.centrosCosto.size} de ${ALL_CC.length} centros de costo · ${totalRows} empleados`;
+  }
+  document.getElementById('nominaPrev').addEventListener('click', ()=>{ nominaPage--; renderNomina(getFiltered()); });
+  document.getElementById('nominaNext').addEventListener('click', ()=>{ nominaPage++; renderNomina(getFiltered()); });
+
+  // ---------- export ----------
+  document.getElementById('exportCCBtn').addEventListener('click', ()=>{
+    if (typeof XLSX === 'undefined'){ alert('No se pudo cargar la librería de exportación. Probá recargar la página.'); return; }
+    const filtered = getFiltered();
+    const wb = XLSX.utils.book_new();
+    const agg = aggByCC(filtered);
+    const rows = Object.entries(agg).map(([cc,v])=>({
+      'Centro de costo': cc, 'Legajos': v.legajos, 'Haberes': Math.round(v.haberes), 'Contribuciones patronales': Math.round(v.empleador), 'Total': Math.round(v.total)
+    })).sort((a,b)=>b['Total']-a['Total']);
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{wch:26},{wch:12},{wch:16},{wch:22},{wch:16}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Por centro de costo');
+    XLSX.writeFile(wb, `rrhh_estacion_centros_costo_${state.desde}_a_${state.hasta}.xlsx`);
+  });
+
+  document.getElementById('exportNominaBtn').addEventListener('click', ()=>{
+    if (typeof XLSX === 'undefined'){ alert('No se pudo cargar la librería de exportación. Probá recargar la página.'); return; }
+    const filtered = getFiltered();
+    let rows = aggregateNomina(filtered);
+    if (state.nominaSearch) rows = rows.filter(r => (r.nombre+' '+r.legajo).toLowerCase().includes(state.nominaSearch));
+    rows.sort((a,b)=>b.total-a.total);
+    const wb = XLSX.utils.book_new();
+    const wsRows = rows.map(r=>({
+      'Legajo': r.legajo, 'Nombre': r.nombre, 'Centro de costo': r.centro_costo,
+      'Haberes': Math.round(r.haberes), 'Contribuciones patronales': Math.round(r.empleador), 'Total': Math.round(r.total), 'Meses con datos': r.meses
+    }));
+    const ws = XLSX.utils.json_to_sheet(wsRows);
+    ws['!cols'] = [{wch:9},{wch:30},{wch:20},{wch:16},{wch:22},{wch:16},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Nomina');
+    XLSX.writeFile(wb, `rrhh_estacion_nomina_${state.desde}_a_${state.hasta}.xlsx`);
+  });
+
+  // ---------- master render ----------
+  function render(){
+    const filtered = getFiltered();
+    renderKPIs(filtered);
+    destroyCharts();
+    buildTrend(filtered);
+    buildRanking(filtered);
+    buildStruct(filtered);
+    renderCCTable(filtered);
+    renderNomina(filtered);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>

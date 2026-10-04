@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LA ESTACIÓN SA · Inversión en Activo Fijo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#221A12; --ink-dim:#7A6A57; --ink-faint:#A8998A;
+    --paper:#FAF6F1; --card:#FFFFFF; --border:rgba(34,26,18,0.10);
+    --accent:#8B5E34; --accent-soft:#EFE3D3; --accent-deep:#5F3E1F;
+    --up:#1E8A5F; --dn:#C1443C; --radius-l:16px; --radius-m:10px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:var(--paper); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2{ font-family:'Space Grotesk',sans-serif; letter-spacing:-0.01em; }
+  a{ color:inherit; }
+  .tabular{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; }
+  ::selection{ background:var(--accent-soft); color:var(--accent-deep); }
+
+  .topbar{ background:var(--card); border-bottom:1px solid var(--border); padding:18px 28px; }
+  .topbar-inner{ max-width:1320px; margin:0 auto; }
+  .back-link{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-dim); text-decoration:none; margin-bottom:10px; }
+  .brand{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; letter-spacing:0.02em; color:var(--ink-dim); }
+  .brand span{ color:var(--accent); }
+  h1.page-title{ font-size:23px; font-weight:700; margin:2px 0 4px; }
+  .page-sub{ font-size:13.5px; color:var(--ink-dim); margin:0; max-width:72ch; }
+
+  .layout{ max-width:1320px; margin:0 auto; padding:24px 28px 60px; display:flex; gap:20px; align-items:flex-start; }
+
+  .sidebar{
+    width:230px; flex-shrink:0; background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m);
+    padding:18px; display:flex; flex-direction:column; gap:18px; position:sticky; top:20px;
+  }
+  .filter-block{ display:flex; flex-direction:column; gap:8px; }
+  .filter-label{ font-size:11.5px; font-weight:600; color:var(--ink-dim); display:flex; align-items:center; gap:6px; }
+  .seg{ display:flex; border:1px solid var(--border); border-radius:9px; overflow:hidden; background:var(--paper); }
+  .seg button{ flex:1; border:0; background:transparent; padding:8px 10px; font:inherit; font-size:12px; font-weight:600; color:var(--ink-dim); cursor:pointer; }
+  .seg button + button{ border-left:1px solid var(--border); }
+  .seg button[aria-pressed="true"]{ background:var(--ink); color:#fff; }
+
+  .chip-group{ display:flex; flex-wrap:wrap; gap:6px; }
+  .chip{
+    border:1px solid var(--border); background:var(--paper); color:var(--ink-dim);
+    padding:5px 10px; border-radius:100px; font-size:11.5px; font-weight:500; font-family:inherit; cursor:pointer;
+    display:flex; align-items:center; gap:5px; transition:all .15s ease;
+  }
+  .chip .dot{ width:6px; height:6px; border-radius:50%; }
+  .chip.active{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-deep); }
+  .chip-hint{ font-size:10.5px; color:var(--ink-faint); line-height:1.4; }
+  .reset-btn{
+    background:transparent; border:1px solid var(--border); color:var(--ink-dim);
+    padding:8px 10px; border-radius:8px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .reset-btn:hover{ border-color:var(--dn); color:var(--dn); }
+
+  .main{ flex:1; min-width:0; }
+
+  .kpi-row{ display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:20px; }
+  .kpi-card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m); padding:16px 18px; }
+  .kpi-label{ font-size:12px; color:var(--ink-dim); margin-bottom:8px; }
+  .kpi-value{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; line-height:1; }
+  .kpi-pct{ font-size:11px; color:var(--ink-faint); margin-top:6px; }
+
+  .grid{ display:grid; grid-template-columns:repeat(12,1fr); gap:14px; }
+  .panel{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius-m); padding:18px; display:flex; flex-direction:column; }
+  .panel-head{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+  .panel-title{ font-size:13.5px; font-weight:600; }
+  .panel-sub{ font-size:11.5px; color:var(--ink-faint); margin-top:2px; }
+  .chart-box{ position:relative; flex:1; min-height:280px; }
+  .span-12{ grid-column:span 12; } .span-7{ grid-column:span 7; } .span-5{ grid-column:span 5; }
+
+  .toggle-group{ display:flex; gap:6px; flex-wrap:wrap; }
+  .toggle-group button{
+    border:1px solid var(--border); background:var(--paper); color:var(--ink-dim);
+    padding:5px 11px; border-radius:7px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .toggle-group button.active{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-deep); }
+
+  .table-wrap{ overflow:auto; max-height:440px; position:relative; border:1px solid var(--border); border-radius:8px; }
+  table.data{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.data th{ text-align:left; font-weight:600; color:var(--ink-dim); font-size:11px; padding:8px 10px; border-bottom:1px solid var(--border); cursor:pointer; white-space:nowrap; position:sticky; top:0; z-index:2; background:var(--card); }
+  table.data td{ padding:8px 10px; border-bottom:1px solid rgba(34,26,18,0.05); white-space:nowrap; }
+  table.data th:first-child, table.data td:first-child{ position:sticky; left:0; z-index:1; background:var(--card); }
+  table.data th:first-child{ z-index:3; }
+  table.data tbody tr:hover{ background:var(--paper); }
+  table.data tbody tr:hover td:first-child{ background:var(--paper); }
+  .export-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent-deep);
+    padding:7px 13px; border-radius:8px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer;
+  }
+  .export-btn:hover{ background:var(--accent); color:#fff; }
+
+  .foot-note{ margin-top:22px; font-size:11.5px; color:var(--ink-faint); line-height:1.6; border-top:1px solid var(--border); padding-top:14px; }
+
+  @media (max-width: 1080px){
+    .layout{ flex-direction:column; }
+    .sidebar{ width:100%; position:static; flex-direction:row; flex-wrap:wrap; }
+    .filter-block{ min-width:180px; flex:1; }
+  }
+  @media (max-width: 780px){
+    .kpi-row{ grid-template-columns:repeat(2,1fr); }
+    .span-7,.span-5{ grid-column:span 12; }
+  }
+</style>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest" crossorigin="use-credentials">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="back-link" href="inicio.html">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+      Volver a Inicio
+    </a>
+    <div>
+      <div class="brand">LA ESTACIÓN <span>SA</span></div>
+      <h1 class="page-title">Inversión en Activo Fijo</h1>
+      <p class="page-sub">Altas y bajas de bienes de uso en relación a las ventas netas del ejercicio, y detalle de incorporaciones por rubro, proveedor y comprobante.</p>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <div class="filter-block">
+      <div class="filter-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Ejercicio (altas)
+      </div>
+      <div class="seg" role="group" aria-label="Ejercicio">
+        <button data-ej="2025" aria-pressed="false">2025</button>
+        <button data-ej="2026" aria-pressed="false">2026</button>
+        <button data-ej="both" aria-pressed="true">Ambos</button>
+      </div>
+    </div>
+
+    <div class="filter-block">
+      <div class="filter-label">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Rubro
+      </div>
+      <div class="chip-group" id="fRubro"></div>
+      <div class="chip-hint">Clic para ver solo ese rubro. Clic de nuevo para volver a ver todos.</div>
+    </div>
+
+    <button class="reset-btn" id="resetBtn">Restablecer filtros</button>
+  </aside>
+
+  <div class="main">
+
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <div class="grid">
+
+      <div class="panel span-12" style="min-height:340px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Evolución histórica — Altas y Bajas de activo fijo</div>
+            <div class="panel-sub">% sobre ventas netas del ejercicio, 2020–2026</div>
+          </div>
+          <div class="toggle-group" id="histKindToggle">
+            <button data-kind="bar" class="active">Barras</button>
+            <button data-kind="line">Líneas</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartHistorico"></canvas></div>
+      </div>
+
+      <div class="panel span-7" style="min-height:340px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Participación de altas por rubro</div>
+            <div class="panel-sub" id="rankingSub">Valor neto, ejercicio seleccionado</div>
+          </div>
+          <div class="toggle-group" id="rankKindToggle">
+            <button data-kind="bar" class="active">Barras</button>
+            <button data-kind="line">Líneas</button>
+          </div>
+        </div>
+        <div class="chart-box"><canvas id="chartRanking"></canvas></div>
+      </div>
+
+      <div class="panel span-5" style="min-height:340px;">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Resumen por rubro</div>
+            <div class="panel-sub" id="resumenSub">Valor neto y % sobre el total de altas</div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="resumenTable"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+
+      <div class="panel span-12">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Detalle de incorporaciones</div>
+            <div class="panel-sub" id="detalleSub">Rubro, proveedor, fecha, comprobante y valor neto</div>
+          </div>
+          <button class="export-btn" id="exportBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+            Exportar a Excel
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table class="data" id="detalleTable"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="foot-note">
+      Fuente: "BIENES_DE_USO.xlsx" — hoja "ACTIVO FIJO" (evolución histórica) y hojas "DETALLE 2025" / "DETALLE 2026" (incorporaciones). Ejercicio fiscal agosto–julio: el ejercicio 2025 abarca ago. 2024–jul. 2025, y el ejercicio 2026 abarca desde ago. 2025 en adelante. La suma del detalle de cada ejercicio coincide exactamente con el total de altas informado en la hoja "ACTIVO FIJO".
+    </div>
+
+  </div>
+</div>
+
+<script>
+const DATA = {"historico":[{"ejercicio":2020,"ventas":254088591.9,"altas":1196674.58,"pct_altas":0.004709674570792881,"bajas":0.0,"pct_bajas":0.0},{"ejercicio":2021,"ventas":269886878.36,"altas":14612010.499999998,"pct_altas":0.05414124091097586,"bajas":843903.85,"pct_bajas":0.0031268798806673485},{"ejercicio":2022,"ventas":656363095.24,"altas":2464445.17,"pct_altas":0.0037546979528135602,"bajas":0.0,"pct_bajas":0.0},{"ejercicio":2023,"ventas":1412037292.22,"altas":38583353.21,"pct_altas":0.027324599302430173,"bajas":0.0,"pct_bajas":0.0},{"ejercicio":2024,"ventas":3906696975.92,"altas":42973256.07,"pct_altas":0.010999894881757523,"bajas":0.0,"pct_bajas":0.0},{"ejercicio":2025,"ventas":6127844181.71,"altas":262308357.45000002,"pct_altas":0.042805977056812466,"bajas":0.0,"pct_bajas":0.0},{"ejercicio":2026,"ventas":7853794223.941251,"altas":530510738.5,"pct_altas":0.06754833694048264,"bajas":0.0,"pct_bajas":0.0}],"detalle":[{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"INX 2 ILUMINACION SA","fecha":"2024-09-24","comprobante":"FAA-00002-00002972","valor_neto":11872000.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"CETROGAR S.A.","fecha":"2024-11-11","comprobante":"FAA-01819-00002425","valor_neto":74048.76},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"ENTERBYTE  SRL","fecha":"2024-11-25","comprobante":"FAA-00006-00001830","valor_neto":27629154.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-01-27","comprobante":"FAA-00012-00021264","valor_neto":93826.13},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-01-27","comprobante":"FAA-00011-00016360","valor_neto":1029906.67},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"PAN CON PAN DE IRISARRI MARIA FERNANDA","fecha":"2025-02-27","comprobante":"FAA-00004-00002696","valor_neto":907149.32},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-03-06","comprobante":"FAA-00011-00016457","valor_neto":438365.75},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"SMART IT SOLUTIONS SRL","fecha":"2025-03-06","comprobante":"FAA-00002-00043893","valor_neto":1420724.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-03-12","comprobante":"FAA-00012-00021400","valor_neto":222474.86},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-03-12","comprobante":"FAA-00011-00016471","valor_neto":2441890.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"COSENZA DARIO ALBERTO","fecha":"2025-03-17","comprobante":"FAA-00004-00000465","valor_neto":1246943.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-04-09","comprobante":"NCA-00031-00000439","valor_neto":-3471796.67},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-04-09","comprobante":"NCA-00032-00000587","valor_neto":-316301.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-04-09","comprobante":"FAA-00032-00001403","valor_neto":316301.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-04-09","comprobante":"FAA-00031-00000452","valor_neto":3471796.67},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-05-09","comprobante":"FAA-00011-00016623","valor_neto":1065759.5},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-05-16","comprobante":"NCA-00031-00000481","valor_neto":-3008250.52},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"INGENIERIA GASTRONOMICA SA","fecha":"2025-05-16","comprobante":"FAA-00031-00000495","valor_neto":1504125.26},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"ENTERBYTE  SRL","fecha":"2025-07-15","comprobante":"FAA-00006-00002563","valor_neto":3883705.0},{"ejercicio":2025,"rubro":"Maquinarias y Equipos","proveedor":"ENTERBYTE  SRL","fecha":"2025-07-21","comprobante":"NDA-00006-00000186","valor_neto":34480.0},{"ejercicio":2025,"rubro":"Muebles y Utiles","proveedor":"RAMON VALDEZ","fecha":"2025-07-17","comprobante":"FAA-00006-00000325","valor_neto":454132.23},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"INX 2 ILUMINACION SA","fecha":"2024-10-22","comprobante":"FAA-00002-00003008","valor_neto":496944.0},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"LOCANE GUSTAVO FABIAN","fecha":"2024-11-25","comprobante":"FAA-00002-00000043","valor_neto":6319336.4},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"INX 2 ILUMINACION SA","fecha":"2025-02-26","comprobante":"FAA-00002-00003202","valor_neto":603770.0},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"ZETABURGOS SRL","fecha":"2025-02-27","comprobante":"FAA-00011-00067414","valor_neto":493304.28},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"MONTAÑA JOSE MARIA","fecha":"2025-03-26","comprobante":"FAA-00002-00000402","valor_neto":507800.0},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"MONTAÑA JOSE MARIA","fecha":"2025-04-07","comprobante":"FAA-00002-00000406","valor_neto":507800.0},{"ejercicio":2025,"rubro":"Instalaciones","proveedor":"ENTERBYTE  SRL","fecha":"2025-07-15","comprobante":"FAA-00006-00002563","valor_neto":581455.0},{"ejercicio":2025,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2024-11-26","comprobante":"FAA-00039-00001428","valor_neto":5203619.91},{"ejercicio":2025,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2025-02-25","comprobante":"FAA-00039-00001647","valor_neto":93696801.31},{"ejercicio":2025,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2025-02-28","comprobante":"FAA-00039-00001672","valor_neto":1691815.41},{"ejercicio":2025,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2025-03-10","comprobante":"NCA-00021-00001542","valor_neto":-100592236.63},{"ejercicio":2025,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2025-03-10","comprobante":"FAA-00021-00000814","valor_neto":201487513.81},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"THAR S.A.","fecha":"2025-08-10","comprobante":"FAA-00007-00006234","valor_neto":2892561.98},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"COSENZA DARIO ALBERTO","fecha":"2025-08-13","comprobante":"FAA-00004-00000500","valor_neto":163694.0},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2025-11-11","comprobante":"FAA-00001-00000644","valor_neto":275393.38},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2026-04-12","comprobante":"FAA-00001-00000670","valor_neto":317445.6},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"D.F. MEGAFRIO S.R.L.","fecha":"2026-05-19","comprobante":"FAA-00011-00063518","valor_neto":638682.45},{"ejercicio":2026,"rubro":"Maquinarias y Equipos","proveedor":"CHAMORRO CLAUDIO FEDERICO","fecha":"2026-09-07","comprobante":"FAA-00001-00000691","valor_neto":250560.59},{"ejercicio":2026,"rubro":"Muebles y Utiles","proveedor":"UNIMATE SA","fecha":"2026-03-11","comprobante":"FAA-00012-00002244","valor_neto":17949524.0},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"RAIZEN ARGENTINA S.A.","fecha":"2025-10-30","comprobante":"FAA-05004-00019399","valor_neto":58175447.4},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"GRANA SRL","fecha":"2025-11-07","comprobante":"FAA-00007-00004082","valor_neto":5178002.25},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"ENTERBYTE  SRL","fecha":"2025-11-19","comprobante":"FAA-00006-00002953","valor_neto":11156325.0},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"MAGGIONI CATALINA","fecha":"2025-11-20","comprobante":"FAA-00005-00000414","valor_neto":11931165.29},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"ENTERBYTE  SRL","fecha":"2025-11-26","comprobante":"NDA-00006-00000233","valor_neto":352305.0},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"MAGGIONI CATALINA","fecha":"2026-02-02","comprobante":"FAA-00005-00000425","valor_neto":9707198.35},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"MAGGIONI CATALINA","fecha":"2026-03-05","comprobante":"FAA-00005-00000428","valor_neto":988925.62},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"GRANA SRL","fecha":"2026-03-24","comprobante":"FAA-00007-00004178","valor_neto":2474916.6},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"GRANA SRL","fecha":"2026-03-26","comprobante":"NCA-00007-00001163","valor_neto":-2474916.6},{"ejercicio":2026,"rubro":"Instalaciones","proveedor":"HECTOR V LOSI Y CIA S R L","fecha":"2026-08-11","comprobante":"FAA-00011-00013646","valor_neto":1976653.6},{"ejercicio":2026,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2026-03-06","comprobante":"FAA-00039-00002324","valor_neto":12642533.94},{"ejercicio":2026,"rubro":"Rodados","proveedor":"DANES SRL","fecha":"2026-05-06","comprobante":"FAA-00022-00000504","valor_neto":163483440.0},{"ejercicio":2026,"rubro":"Rodados","proveedor":"DANES SRL","fecha":"2026-05-11","comprobante":"NDA-00012-00002473","valor_neto":577680.0},{"ejercicio":2026,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2026-07-01","comprobante":"NCA-00021-00001963","valor_neto":-12642533.94},{"ejercicio":2026,"rubro":"Rodados","proveedor":"GONAR AUTOMOTORES S.A .","fecha":"2026-07-01","comprobante":"FAA-00021-00000959","valor_neto":244495733.94}]};
+(function(){
+
+  const FONT = "Inter, sans-serif";
+  Chart.defaults.font.family = FONT;
+  Chart.defaults.font.size = 11.5;
+  Chart.defaults.color = '#7A6A57';
+  Chart.defaults.borderColor = 'rgba(34,26,18,0.06)';
+
+  const RUBRO_PALETTE = ['#8B5E34','#1E8A5F','#2B6CB0','#C1443C','#9C6ADE','#B98600'];
+  const ALL_RUBROS = [...new Set(DATA.detalle.map(d=>d.rubro))].sort();
+  const RUBRO_COLOR = {};
+  ALL_RUBROS.forEach((r,i)=>{ RUBRO_COLOR[r] = RUBRO_PALETTE[i % RUBRO_PALETTE.length]; });
+
+  function fmtMoney(n){
+    const abs = Math.abs(n);
+    if (abs >= 1e6) return '$'+(n/1e6).toFixed(1)+'M';
+    return '$'+n.toLocaleString('es-AR',{maximumFractionDigits:0});
+  }
+  function fmtMoneyFull(n){ return '$'+n.toLocaleString('es-AR',{maximumFractionDigits:0}); }
+  function fmtPct(n){ return (n*100).toFixed(1)+'%'; }
+  function fmtFecha(f){ if(!f) return ''; const [y,m,d]=f.split('-'); return `${d}/${m}/${y}`; }
+
+  const state = {
+    ejercicio: 'both', // '2025' | '2026' | 'both'
+    rubros: new Set(ALL_RUBROS),
+    histKind: 'bar',
+    rankKind: 'bar'
+  };
+
+  // ---------- ejercicio selector ----------
+  document.querySelectorAll('.seg button[data-ej]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.ejercicio = btn.dataset.ej;
+      document.querySelectorAll('.seg button[data-ej]').forEach(b=> b.setAttribute('aria-pressed', b===btn ? 'true':'false'));
+      render();
+    });
+  });
+
+  // ---------- rubro chips ----------
+  const rubroChipMap = {};
+  const fRubroEl = document.getElementById('fRubro');
+  ALL_RUBROS.forEach(r=>{
+    const chip = document.createElement('button');
+    chip.className = 'chip active';
+    chip.innerHTML = `<span class="dot" style="background:${RUBRO_COLOR[r]}"></span>${r}`;
+    chip.addEventListener('click', ()=> toggleRubro(r));
+    rubroChipMap[r] = chip;
+    fRubroEl.appendChild(chip);
+  });
+  function syncRubroChips(){
+    ALL_RUBROS.forEach(r=>{
+      if (state.rubros.has(r)) rubroChipMap[r].classList.add('active');
+      else rubroChipMap[r].classList.remove('active');
+    });
+  }
+  function toggleRubro(r){
+    if (state.rubros.size === ALL_RUBROS.length){ state.rubros = new Set([r]); }
+    else if (state.rubros.size === 1 && state.rubros.has(r)){ state.rubros = new Set(ALL_RUBROS); }
+    else if (state.rubros.has(r)){ state.rubros.delete(r); if(state.rubros.size===0) state.rubros = new Set(ALL_RUBROS); }
+    else { state.rubros.add(r); }
+    syncRubroChips();
+    render();
+  }
+  function isolateRubro(r){ state.rubros = new Set([r]); syncRubroChips(); render(); }
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    state.ejercicio='both'; state.rubros = new Set(ALL_RUBROS);
+    document.querySelectorAll('.seg button[data-ej]').forEach(b=> b.setAttribute('aria-pressed', b.dataset.ej==='both'?'true':'false'));
+    syncRubroChips();
+    render();
+  });
+
+  document.getElementById('histKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.histKind = btn.dataset.kind;
+      document.getElementById('histKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+  document.getElementById('rankKindToggle').querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.rankKind = btn.dataset.kind;
+      document.getElementById('rankKindToggle').querySelectorAll('button').forEach(b=>b.classList.toggle('active', b===btn));
+      render();
+    });
+  });
+
+  // ---------- data helpers ----------
+  function getFiltered(){
+    return DATA.detalle.filter(d=>{
+      if (state.ejercicio !== 'both' && String(d.ejercicio) !== state.ejercicio) return false;
+      if (!state.rubros.has(d.rubro)) return false;
+      return true;
+    });
+  }
+
+  function aggByRubro(rows){
+    const map = {};
+    rows.forEach(d=>{
+      if (!map[d.rubro]) map[d.rubro] = { valor:0, n:0 };
+      map[d.rubro].valor += d.valor_neto;
+      map[d.rubro].n += 1;
+    });
+    return map;
+  }
+
+  // ---------- KPIs ----------
+  function renderKPIs(){
+    const ejActual = state.ejercicio === 'both' ? 2026 : parseInt(state.ejercicio);
+    const h = DATA.historico.find(x=>x.ejercicio===ejActual);
+    const cards = [
+      { label:`Ventas netas — ejercicio ${ejActual}`, value: fmtMoneyFull(h.ventas) },
+      { label:'Altas en activo fijo', value: fmtMoneyFull(h.altas), pct: fmtPct(h.pct_altas)+' de ventas' },
+      { label:'Bajas en activo fijo', value: fmtMoneyFull(h.bajas), pct: fmtPct(h.pct_bajas)+' de ventas' },
+      { label:'Cantidad de comprobantes (filtro actual)', value: getFiltered().length },
+      { label:'Total de altas (filtro actual)', value: fmtMoneyFull(getFiltered().reduce((s,d)=>s+d.valor_neto,0)) },
+    ];
+    document.getElementById('kpiRow').innerHTML = cards.map(c=>`
+      <div class="kpi-card">
+        <div class="kpi-label">${c.label}</div>
+        <div class="kpi-value tabular">${c.value}</div>
+        ${c.pct ? `<div class="kpi-pct tabular">${c.pct}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  // ---------- charts ----------
+  let charts = {};
+  function destroyCharts(){ Object.values(charts).forEach(c=>c && c.destroy()); charts = {}; }
+  const gridColor = 'rgba(34,26,18,0.06)';
+  const tickColor = '#9A8B79';
+  function tooltipBase(){
+    return { backgroundColor:'#221A12', borderColor:'rgba(255,255,255,0.1)', borderWidth:1, titleColor:'#fff', bodyColor:'#EBE1D4',
+             padding:10, titleFont:{family:FONT, weight:'600', size:12}, bodyFont:{family:FONT, size:11.5}, boxPadding:4 };
+  }
+  function pointerCursor(evt, elements){ evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
+
+  function buildHistorico(){
+    const ctx = document.getElementById('chartHistorico');
+    const isLine = state.histKind === 'line';
+    const labels = DATA.historico.map(h=>h.ejercicio);
+    const commonOpts = isLine ? { pointRadius:4, pointHoverRadius:6, borderWidth:2.4, tension:0.3, fill:false } : { borderRadius:3, maxBarThickness:36 };
+    charts.hist = new Chart(ctx, {
+      type: isLine ? 'line' : 'bar',
+      data:{ labels, datasets:[
+        { label:'Altas / Ventas', data: DATA.historico.map(h=>h.pct_altas*100), borderColor:'#8B5E34', backgroundColor:'#8B5E34', ...commonOpts },
+        { label:'Bajas / Ventas', data: DATA.historico.map(h=>h.pct_bajas*100), borderColor:'#C1443C', backgroundColor:'#C1443C', ...commonOpts }
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        onHover: pointerCursor,
+        onClick: (evt, els) => { if (els.length){ const ej = labels[els[0].index]; if (ej===2025||ej===2026){ state.ejercicio=String(ej); document.querySelectorAll('.seg button[data-ej]').forEach(b=> b.setAttribute('aria-pressed', b.dataset.ej===String(ej)?'true':'false')); render(); } } },
+        plugins:{
+          legend:{ position:'bottom', labels:{ boxWidth:9, boxHeight:9, usePointStyle:true, pointStyle: isLine?'circle':'rect', padding:14 } },
+          tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${c.dataset.label}: ${c.parsed.y.toFixed(1)}%`, afterLabel:(c)=> (labels[c.dataIndex]===2025||labels[c.dataIndex]===2026) ? 'Clic para ver el detalle de ese ejercicio' : '' } }
+        },
+        scales:{
+          x:{ grid:{color:gridColor}, ticks:{color:tickColor} },
+          y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>v+'%'}, beginAtZero:true }
+        }
+      }
+    });
+  }
+
+  function buildRanking(filtered){
+    const ctx = document.getElementById('chartRanking');
+    const sub = document.getElementById('rankingSub');
+    const ejTxt = state.ejercicio==='both' ? '2025 y 2026' : state.ejercicio;
+    sub.textContent = `Valor neto, ejercicio ${ejTxt}`;
+    const agg = aggByRubro(filtered);
+    const entries = Object.entries(agg).map(([r,v])=>({rubro:r, valor:v.valor})).sort((a,b)=>b.valor-a.valor);
+    const isLine = state.rankKind === 'line';
+    const colors = entries.map(e=>RUBRO_COLOR[e.rubro]);
+
+    if (isLine){
+      charts.rank = new Chart(ctx, {
+        type:'line',
+        data:{ labels: entries.map(e=>e.rubro), datasets:[{ data: entries.map(e=>e.valor), borderColor:'#8A8698', backgroundColor:colors, pointBackgroundColor:colors, pointBorderColor:colors, pointRadius:7, pointHoverRadius:9, borderWidth:2, tension:0 }] },
+        options:{ responsive:true, maintainAspectRatio:false,
+          onHover: pointerCursor,
+          onClick: (evt, els) => { if (els.length) isolateRubro(entries[els[0].index].rubro); },
+          plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${fmtMoneyFull(c.parsed.y)}`, afterLabel:()=>'Clic para aislar' } } },
+          scales:{ x:{ grid:{display:false}, ticks:{color:tickColor} }, y:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)}, beginAtZero:true } }
+        }
+      });
+    } else {
+      charts.rank = new Chart(ctx, {
+        type:'bar',
+        data:{ labels: entries.map(e=>e.rubro), datasets:[{ data: entries.map(e=>e.valor), backgroundColor: colors, borderRadius:4, maxBarThickness:40 }] },
+        options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+          onHover: pointerCursor,
+          onClick: (evt, els) => { if (els.length) isolateRubro(entries[els[0].index].rubro); },
+          plugins:{ legend:{display:false}, tooltip:{ ...tooltipBase(), callbacks:{ label:c=>` ${fmtMoneyFull(c.parsed.x)}`, afterLabel:()=>'Clic para aislar' } } },
+          scales:{ x:{ grid:{color:gridColor}, ticks:{color:tickColor, callback:v=>fmtMoney(v)}, beginAtZero:true }, y:{ grid:{display:false}, ticks:{color:tickColor} } }
+        }
+      });
+    }
+  }
+
+  // ---------- resumen por rubro table ----------
+  function renderResumenTable(filtered){
+    const sub = document.getElementById('resumenSub');
+    const total = filtered.reduce((s,d)=>s+d.valor_neto,0);
+    const agg = aggByRubro(filtered);
+    const entries = Object.entries(agg).map(([r,v])=>({rubro:r, valor:v.valor, n:v.n, pct: total? v.valor/total : 0})).sort((a,b)=>b.valor-a.valor);
+    sub.textContent = `Valor neto y % sobre el total de altas — $${total.toLocaleString('es-AR',{maximumFractionDigits:0})} en total`;
+
+    const table = document.getElementById('resumenTable');
+    table.querySelector('thead').innerHTML = '<tr><th>Rubro</th><th>Comprob.</th><th>Valor neto</th><th>% s/altas</th></tr>';
+    table.querySelector('tbody').innerHTML = entries.map(e=>`
+      <tr style="cursor:pointer;" data-rubro="${e.rubro}">
+        <td style="border-left:3px solid ${RUBRO_COLOR[e.rubro]}; padding-left:9px;">${e.rubro}</td>
+        <td class="tabular">${e.n}</td>
+        <td class="tabular">${fmtMoneyFull(e.valor)}</td>
+        <td class="tabular">${fmtPct(e.pct)}</td>
+      </tr>
+    `).join('');
+    table.querySelectorAll('tbody tr').forEach(tr=> tr.addEventListener('click', ()=> isolateRubro(tr.dataset.rubro)));
+  }
+
+  // ---------- detalle table ----------
+  let detSort = { col:'fecha', dir:'asc' };
+  function renderDetalleTable(filtered){
+    const sub = document.getElementById('detalleSub');
+    const ejTxt = state.ejercicio==='both' ? 'ejercicios 2025 y 2026' : `ejercicio ${state.ejercicio}`;
+    sub.textContent = `Rubro, proveedor, fecha, comprobante y valor neto — ${ejTxt} · ${filtered.length} comprobantes`;
+
+    const totalPorRubro = aggByRubro(filtered);
+    const totalGeneral = filtered.reduce((s,d)=>s+d.valor_neto,0);
+
+    let rows = filtered.map(d=>({
+      ...d,
+      pctRubro: totalGeneral ? (totalPorRubro[d.rubro] ? totalPorRubro[d.rubro].valor/totalGeneral : 0) : 0
+    }));
+    rows.sort((a,b)=>{
+      let av=a[detSort.col], bv=b[detSort.col];
+      if (typeof av === 'string'){ av=av.toLowerCase(); bv=(bv||'').toLowerCase(); }
+      if (av<bv) return detSort.dir==='asc'?-1:1;
+      if (av>bv) return detSort.dir==='asc'?1:-1;
+      return 0;
+    });
+
+    const table = document.getElementById('detalleTable');
+    const cols = [
+      {k:'rubro', label:'Rubro'}, {k:'proveedor', label:'Proveedor'}, {k:'fecha', label:'Fecha'},
+      {k:'comprobante', label:'Comprobante'}, {k:'valor_neto', label:'Valor neto'}, {k:'pctRubro', label:'% del rubro s/altas'}
+    ];
+    table.querySelector('thead').innerHTML = '<tr>' + cols.map(c=>{
+      const arrow = detSort.col===c.k ? (detSort.dir==='asc'?' ▲':' ▼') : '';
+      return `<th data-col="${c.k}">${c.label}${arrow}</th>`;
+    }).join('') + '</tr>';
+
+    table.querySelector('tbody').innerHTML = rows.map(r=>`
+      <tr>
+        <td style="border-left:3px solid ${RUBRO_COLOR[r.rubro]}; padding-left:9px;">${r.rubro}</td>
+        <td>${r.proveedor}</td>
+        <td class="tabular">${fmtFecha(r.fecha)}</td>
+        <td>${r.comprobante||''}</td>
+        <td class="tabular">${fmtMoneyFull(r.valor_neto)}</td>
+        <td class="tabular">${fmtPct(r.pctRubro)}</td>
+      </tr>
+    `).join('');
+
+    table.querySelectorAll('th').forEach(th=>{
+      th.addEventListener('click', ()=>{
+        const col = th.dataset.col;
+        if (detSort.col===col){ detSort.dir = detSort.dir==='asc'?'desc':'asc'; } else { detSort.col=col; detSort.dir = col==='fecha' ? 'asc' : 'desc'; }
+        renderDetalleTable(getFiltered());
+      });
+    });
+  }
+
+  // ---------- export ----------
+  document.getElementById('exportBtn').addEventListener('click', ()=>{
+    if (typeof XLSX === 'undefined'){ alert('No se pudo cargar la librería de exportación. Probá recargar la página.'); return; }
+    const filtered = getFiltered();
+    const totalPorRubro = aggByRubro(filtered);
+    const totalGeneral = filtered.reduce((s,d)=>s+d.valor_neto,0);
+    const wb = XLSX.utils.book_new();
+
+    const detRows = filtered.map(d=>({
+      'Rubro': d.rubro, 'Proveedor': d.proveedor, 'Fecha': fmtFecha(d.fecha), 'Comprobante': d.comprobante,
+      'Valor neto': Math.round(d.valor_neto), '% del rubro s/altas': totalGeneral ? +(totalPorRubro[d.rubro].valor/totalGeneral*100).toFixed(2) : 0
+    }));
+    const ws1 = XLSX.utils.json_to_sheet(detRows);
+    ws1['!cols'] = [{wch:20},{wch:34},{wch:12},{wch:22},{wch:16},{wch:16}];
+    XLSX.utils.book_append_sheet(wb, ws1, 'Detalle altas');
+
+    const resumenRows = Object.entries(totalPorRubro).map(([r,v])=>({ 'Rubro':r, 'Comprobantes':v.n, 'Valor neto': Math.round(v.valor), '% s/altas': totalGeneral? +(v.valor/totalGeneral*100).toFixed(2):0 })).sort((a,b)=>b['Valor neto']-a['Valor neto']);
+    const ws2 = XLSX.utils.json_to_sheet(resumenRows);
+    ws2['!cols'] = [{wch:20},{wch:14},{wch:16},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, ws2, 'Resumen por rubro');
+
+    const histRows = DATA.historico.map(h=>({ 'Ejercicio':h.ejercicio, 'Ventas netas':Math.round(h.ventas), 'Altas':Math.round(h.altas), '% altas s/ventas':+(h.pct_altas*100).toFixed(2), 'Bajas':Math.round(h.bajas), '% bajas s/ventas':+(h.pct_bajas*100).toFixed(2) }));
+    const ws3 = XLSX.utils.json_to_sheet(histRows);
+    ws3['!cols'] = [{wch:10},{wch:16},{wch:16},{wch:14},{wch:14},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws3, 'Histórico');
+
+    const ejLabel = state.ejercicio==='both' ? 'todos' : state.ejercicio;
+    XLSX.writeFile(wb, `activo_fijo_la_estacion_${ejLabel}.xlsx`);
+  });
+
+  // ---------- master render ----------
+  function render(){
+    const filtered = getFiltered();
+    renderKPIs();
+    destroyCharts();
+    buildHistorico();
+    buildRanking(filtered);
+    renderResumenTable(filtered);
+    renderDetalleTable(filtered);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
