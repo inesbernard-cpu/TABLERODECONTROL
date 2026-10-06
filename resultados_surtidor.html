@@ -398,7 +398,7 @@
         Volver a Inicio
       </a>
       <div class="brand">EL SURTIDOR <span>SA</span></div>
-      <div class="brand-sub">Panel de resultados · ventas, costos y erogaciones por sucursal y centro de costo · <span id="verStamp" title="Fecha y hora de esta versión del archivo">versión 06/10/2026 14:45</span></div>
+      <div class="brand-sub">Panel de resultados · ventas, costos y erogaciones por sucursal y centro de costo · <span id="verStamp" title="Fecha y hora de esta versión del archivo">versión 06/10/2026 22:42</span></div>
       <div>
         <button type="button" class="version-badge con-dui selected" data-ds="con_dui">Con ajuste DUI</button><button type="button" class="version-badge sin-dui" data-ds="sin_dui">Sin ajuste DUI</button>
       </div>
@@ -563,7 +563,7 @@
 
   <!-- ============ VISTA: GRUPOS DE PRODUCTO ============ -->
   <section class="view" id="view-grupos">
-    <div class="legend-note" style="margin-bottom:10px;">Esta vista muestra los datos originales, sin modificación en la actividad de Transporte y sin ajustes por DUI.</div>
+    <div class="legend-note" id="grupoNotaVista" style="margin-bottom:10px;">Esta vista muestra los datos originales, sin modificación en la actividad de Transporte y sin ajustes por DUI.</div>
     <div id="grupoChipRow"></div>
     <div class="kpi-grid" id="kpiGrupos"></div>
     <div class="cx-note" id="grupoConcil" style="margin:0 0 16px;display:none;"></div>
@@ -747,13 +747,20 @@
 
     <div class="panel">
       <div class="panel-head-row">
-        <h3>Resultado por sucursal y rubro</h3>
-        <div class="toggle-group" id="sucRubroKindToggle">
-          <button data-kind="bar" class="active">Barras</button>
-          <button data-kind="line">Líneas</button>
+        <h3 id="titSucRubro">Utilidad neta por sucursal y rubro</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div class="toggle-group" id="sucRubroMetricToggle">
+            <button data-metric="ventas">Ventas</button>
+            <button data-metric="util_bruta">Utilidad bruta</button>
+            <button data-metric="util_neta" class="active">Utilidad neta</button>
+          </div>
+          <div class="toggle-group" id="sucRubroKindToggle">
+            <button data-kind="bar" class="active">Barras</button>
+            <button data-kind="line">Líneas</button>
+          </div>
         </div>
       </div>
-      <div class="desc" id="descSucRubro">Ventas del período seleccionado — todas las sucursales · clic en una barra o rubro para filtrar</div>
+      <div class="desc" id="descSucRubro">Utilidad neta del período seleccionado — todas las sucursales · clic en una barra o rubro para filtrar</div>
       <div class="chart-wrap tall"><div id="chartSucursalRubro" class="chartbox"></div></div>
     </div>
 
@@ -815,7 +822,21 @@ const GRUPOS_ORIGINALES = (function(){
   }
   return [];
 })();
-let GROWS = GRUPOS_ORIGINALES;
+// En la opción \u00b1 Transporte, la actividad Transporte (un único grupo "TRANSPORTE") toma su venta y su costo de la planilla de Resultados \u00b1 Transporte,
+// para que aparezca también con su costo de ventas en esta pestaña. El resto de los grupos son siempre los originales.
+const _gruposRedist = {};
+function gruposSegunTransporte(){
+  if(activeTransportKey !== 'redist') return GRUPOS_ORIGINALES;
+  if(_gruposRedist.rows) return _gruposRedist.rows;
+  const res = DATASETS.sin_dui.redist.resultados.data;
+  _gruposRedist.rows = GRUPOS_ORIGINALES.map(r => {
+    if(r.f !== 'TRANSPORTE') return r;
+    const x = res[r.p] && res[r.p].TRANSPORTE && res[r.p].TRANSPORTE[r.s];
+    return x ? Object.assign({}, r, { neto: x.ventas, costo: x.costo }) : r;
+  });
+  return _gruposRedist.rows;
+}
+let GROWS = gruposSegunTransporte();
 const FAMILIA_COLOR = { 'COMBUSTIBLES': COLORS.amberDeep, 'LUBRICANTES': COLORS.diesel, 'OTRAS MERCADERIAS': COLORS.petrol2, 'TRANSPORTE': COLORS.clay, 'BIENES DE USO': COLORS.plum };
 const GRUPO_CC_COLOR = { 'PLAYA': COLORS.amberDeep, 'SHOP': COLORS.diesel, 'TRANSPORTE': COLORS.clay };
 function grupoBranchKey(sel){ return sel === 'ALL' ? null : sel; }
@@ -901,7 +922,8 @@ const FAMILIA_TO_RUBRO = { 'COMBUSTIBLES':'COMBUSTIBLES', 'LUBRICANTES':'LUBRICA
 let selectedRubro = null;   // set by clicking a rubro in charts
 let selectedCC = null;      // set by clicking a centro de costo in the donut
 let sucBarKind = 'bar';     // 'bar' | 'line' — Ventas y utilidad neta por sucursal
-let sucRubroKind = 'bar';   // 'bar' | 'line' — Resultado por sucursal y rubro
+let sucRubroKind = 'bar';   // 'bar' | 'line' — gráfico por sucursal y rubro
+let sucRubroMetric = 'util_neta';   // 'ventas' | 'util_bruta' | 'util_neta' — qué muestra el gráfico por sucursal y rubro (el título se ajusta solo)
 let sucTrendMetrics = new Set(['ventas']); // subconjunto de 'ventas' | 'util_bruta' | 'util_neta' — Evolución por sucursal
 function filterByBranch(b){ fSucursal.value = b; render(); }
 function filterByMonth(m){ fDesde.value = m; fHasta.value = m; render(); }
@@ -1048,16 +1070,17 @@ function barChart(id, {labels, series, stacked, height, formatTip, onBarClick, o
       barsHTML = series.map((s,si) => {
         const v = s.data[i] || 0;
         const hPct = (Math.abs(v)/range)*100;
-        const alignTop = v < 0;
-        return `<div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:${alignTop?'flex-start':'flex-end'};">`+
-          `<div class="bar-rect" data-si="${si}" data-li="${i}" style="height:${hPct}%;background:${v<0?COLORS.alert:s.color};${barCursor}" title="${esc(s.name)} · ${esc(lb)}: ${esc(formatTip(v))}${onBarClick?' (clic para filtrar)':''}"></div></div>`;
-      }).join('');
+        // todas las barras parten de la línea del cero: las positivas suben y las negativas bajan
+        const pos = v < 0 ? `top:${zeroPct}%;border-radius:0 0 2px 2px;` : `bottom:${100 - zeroPct}%;`;
+        return `<div style="flex:1;height:100%;position:relative;">`+
+          `<div class="bar-rect" data-si="${si}" data-li="${i}" style="position:absolute;left:0;right:0;${pos}height:${hPct}%;background:${v<0?COLORS.alert:s.color};${barCursor}" title="${esc(s.name)} · ${esc(lb)}: ${esc(formatTip(v))}${onBarClick?' (clic para filtrar)':''}"></div></div>`;
+      }).join('') + (minV < 0 ? `<div class="zero-line" style="top:${zeroPct}%;left:-7px;right:-7px;"></div>` : '');
     }
     return `<div class="bar-group"><div class="bars-row">${barsHTML}</div>
       <div class="bar-axis-lbl" data-li="${i}" style="${lblCursor}">${esc(lb)}</div></div>`;
   }).join('');
 
-  const zeroLine = (minV < 0) ? `<div class="zero-line" style="bottom:${100-zeroPct}%;"></div>` : '';
+  const zeroLine = '';   // la línea del cero se dibuja dentro de cada grupo de barras, alineada con ellas
   let html = `<div class="bars-area" style="position:relative;">${zeroLine}${cols}</div>`;
   if(series.length > 1) html += legendHTML(series.map(s => ({name:s.name, color:s.color})));
   const container = document.getElementById(id);
@@ -1772,7 +1795,7 @@ function renderGrupoConciliacion(sel, months){
   const el = document.getElementById('grupoConcil'); if(!el) return;
   const act = fActividad.value;
   if(selectedGrupo || selectedCCG || act === 'PTO DE PALOS'){ el.style.display = 'none'; return; }
-  const orig = DATASETS.sin_dui.original.resultados.data;   // Resultados sin ajustes de DUI ni de Transporte: la misma base que usa esta pestaña
+  const orig = DATASETS.sin_dui[activeTransportKey].resultados.data;   // Resultados sin ajustes de DUI ni de Transporte: la misma base que usa esta pestaña
   const rubs = act === 'ALL' ? ['COMBUSTIBLES','LUBRICANTES','OTRAS MERC.','TRANSPORTE'] : [act];
   const bs = sel === 'ALL' ? BRANCHES : [sel];
   const rAt = (p,b,r) => { const x = orig[p] && orig[p][r] && orig[p][r][b]; return x ? [x.ventas, x.costo] : [0,0]; };
@@ -1801,13 +1824,19 @@ function renderGrupoConciliacion(sel, months){
     return monthLabel(x.p) + ' \u00b7 ' + BRANCH_LABEL[x.b] + ' \u00b7 ' + actividadLabel(x.r) + ': Resultados ' + fmtMoneyFull(x.rv) + ' vs Grupos ' + fmtMoneyFull(x.gv)
       + (x.p === '2025-08' && x.b === 'CENTRO' ? ' (ajuste ONE OFF de agosto 2025, que Resultados prorratea entre las actividades de Centro)' : '');
   });
-  el.innerHTML = '<b>Conciliación con Resultados</b> (datos originales, sin DUI ni ajuste de Transporte' + (act === 'ALL' ? '; sin Pto. de Palos, que no se factura por grupos' : '') + '). '
+  el.innerHTML = '<b>Conciliación con Resultados</b> (' + (activeTransportKey === 'redist' ? 'sin ajustes por DUI, con la opción \u00b1 Transporte' : 'datos originales, sin DUI ni ajuste de Transporte') + '' + (act === 'ALL' ? '; sin Pto. de Palos, que no se factura por grupos' : '') + '). '
     + 'Ventas: Resultados ' + esc(fmtMoneyFull(vR)) + ' \u00b7 Grupos ' + esc(fmtMoneyFull(vG)) + ' \u00b7 diferencia ' + esc(fmtMoneyFull(vR - vG)) + esc(pc(vR, vG)) + '. '
     + 'Costo: Resultados ' + esc(fmtMoneyFull(cR)) + ' \u00b7 Grupos ' + esc(fmtMoneyFull(cG)) + ' \u00b7 diferencia ' + esc(fmtMoneyFull(cR - cG)) + esc(pc(cR, cG)) + '.'
     + (lista.length ? '<br>Mayores diferencias: ' + lista.map(esc).join(' \u2014 ') + '.' : '<br>Sin diferencias mayores a $1.000.000 en ningún mes.');
   el.style.display = '';
 }
 
+function renderGrupoNotaVista(){
+  const el = document.getElementById('grupoNotaVista'); if(!el) return;
+  el.textContent = activeTransportKey === 'redist'
+    ? 'Esta vista muestra los grupos de producto sin ajustes por DUI. La actividad de Transporte sigue la opción elegida (\u00b1 Transporte): su venta y su costo salen de la planilla de Resultados \u00b1 Transporte.'
+    : 'Esta vista muestra los datos originales, sin modificación en la actividad de Transporte y sin ajustes por DUI.';
+}
 function renderGrupos(sel, months){
   const branch = grupoBranchKey(sel);
   const rows = grupoFilteredRows(months, branch, selectedFamiliaG, selectedCCG);
@@ -1828,6 +1857,7 @@ function renderGrupos(sel, months){
   ].map(k => `<div class="kpi ${k.neg?'neg':''}"><div class="lbl">${esc(k.lbl)}</div><div class="val num">${esc(k.val)}</div><div class="sub ${k.neg?'neg':''}">${esc(k.sub)}</div></div>`).join('');
 
   renderGrupoConciliacion(sel, months);
+  renderGrupoNotaVista();
   const top15 = grupoList.slice(0,15);
   hBarChart('chartGrupoRanking', {
     labels: top15.map(r=>r.g), data: top15.map(r=>r.neto), color: COLORS.amberDeep,
@@ -2243,10 +2273,16 @@ function renderCentros(months){
   matrixEl.innerHTML = thead + tbody;
   matrixEl.querySelectorAll('th[data-cc]').forEach(th => th.addEventListener('click', () => toggleCC(th.dataset.cc)));
 
-  // --- Resultado por sucursal y rubro ---
-  const sRubroSeries = S.branches.map(b => ({ name: BRANCH_LABEL[b], color: BRANCH_COLOR[b], data: S.rubros.map(r => sumField(r,b,'ventas',months)) }));
+  // --- Gráfico por sucursal y rubro: el título siempre dice lo que muestra ---
+  const RM_LABEL = { ventas:'Ventas', util_bruta:'Utilidad bruta', util_neta:'Utilidad neta' };
+  const valRubro = (b, r) => sucRubroMetric === 'ventas' ? sumField(r, b, 'ventas', months)
+    : sucRubroMetric === 'util_bruta' ? sumField(r, b, 'util_bruta', months)
+    : sumField(r, b, 'util_bruta', months) - erogAllocate(months, b, r).total;   // utilidad neta: incluye su parte de Integrado y General
+  const sRubroSeries = S.branches.map(b => ({ name: BRANCH_LABEL[b], color: BRANCH_COLOR[b], data: S.rubros.map(r => valRubro(b, r)) }));
+  const tRub = document.getElementById('titSucRubro'); if(tRub) tRub.textContent = RM_LABEL[sucRubroMetric] + ' por sucursal y rubro';
+  document.querySelectorAll('#sucRubroMetricToggle button').forEach(b => b.classList.toggle('active', b.dataset.metric === sucRubroMetric));
   const dRub = document.getElementById('descSucRubro');
-  if(dRub) dRub.textContent = 'Ventas del período seleccionado — ' + (S.sel === 'ALL' ? 'todas las sucursales' : 'sucursal ' + BRANCH_LABEL[S.sel]) + (S.act !== 'ALL' ? ' · actividad ' + actividadLabel(S.act) : '') + (S.sel === 'ALL' ? ' · clic en una barra o rubro para filtrar' : ' · clic en un rubro para filtrar');
+  if(dRub) dRub.textContent = RM_LABEL[sucRubroMetric] + ' del período seleccionado — ' + (S.sel === 'ALL' ? 'todas las sucursales' : 'sucursal ' + BRANCH_LABEL[S.sel]) + (S.act !== 'ALL' ? ' · actividad ' + actividadLabel(S.act) : '') + (S.sel === 'ALL' ? ' · clic en una barra o rubro para filtrar' : ' · clic en un rubro para filtrar');
   const findBranch = s => Object.keys(BRANCH_LABEL).find(k=>BRANCH_LABEL[k]===s.name);
   if (sucRubroKind === 'line'){
     lineChart('chartSucursalRubro', { labels: S.rubros, series: sRubroSeries, onPointClick: (s) => { const bk = findBranch(s); if(bk) filterByBranch(bk); } });
@@ -2292,6 +2328,9 @@ document.getElementById('sucBarKindToggle').querySelectorAll('button').forEach(b
     render();
   });
 });
+document.getElementById('sucRubroMetricToggle').querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{ sucRubroMetric = btn.dataset.metric; render(); });
+});
 document.getElementById('sucRubroKindToggle').querySelectorAll('button').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     sucRubroKind = btn.dataset.kind;
@@ -2322,7 +2361,7 @@ document.querySelectorAll('[data-ds]').forEach(btn => {
     if(key === activeDatasetKey) return;
     activeDatasetKey = key;
     DATA = currentDataBlob();
-    GROWS = GRUPOS_ORIGINALES;
+    GROWS = gruposSegunTransporte();
     document.querySelectorAll('[data-ds]').forEach(b => b.classList.toggle('selected', b.dataset.ds === key));
     render();
   });
@@ -2333,7 +2372,7 @@ document.querySelectorAll('[data-tr]').forEach(btn => {
     if(key === activeTransportKey) return;
     activeTransportKey = key;
     DATA = currentDataBlob();
-    GROWS = GRUPOS_ORIGINALES;
+    GROWS = gruposSegunTransporte();
     document.querySelectorAll('[data-tr]').forEach(b => b.classList.toggle('selected', b.dataset.tr === key));
     render();
   });

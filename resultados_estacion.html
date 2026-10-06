@@ -360,7 +360,7 @@
         Volver a Inicio
       </a>
       <div class="brand">LA ESTACIÓN <span>SA</span></div>
-      <div class="brand-sub">Panel de resultados · ventas, costos y erogaciones · <span id="verStamp" title="Fecha y hora de esta versión del archivo">versión 06/10/2026 14:45</span></div>
+      <div class="brand-sub">Panel de resultados · ventas, costos y erogaciones · <span id="verStamp" title="Fecha y hora de esta versión del archivo">versión 06/10/2026 22:42</span></div>
       <div>
         <button type="button" class="version-badge con-dui selected" data-ds="con_dui">Con ajuste DUI</button><button type="button" class="version-badge sin-dui" data-ds="sin_dui">Sin ajuste DUI</button>
       </div>
@@ -491,7 +491,7 @@
 
   <!-- ============ VISTA: GRUPOS DE PRODUCTO ============ -->
   <section class="view" id="view-grupos">
-    <div class="legend-note" style="margin-bottom:10px;">Esta vista muestra los datos originales, sin modificación en la actividad de Transporte y sin ajustes por DUI.</div>
+    <div class="legend-note" id="grupoNotaVista" style="margin-bottom:10px;">Esta vista muestra los datos originales, sin modificación en la actividad de Transporte y sin ajustes por DUI.</div>
     <div class="legend-note" id="grupoNotaAbril" style="display:none;margin-bottom:10px;max-width:none;border-left:3px solid #e8952f;padding-left:10px;"></div>
     <div id="grupoChipRow"></div>
     <div class="kpi-grid" id="kpiGrupos"></div>
@@ -820,7 +820,22 @@ function computeTotalsByCat(cc, months){
 // combinación base (Sin ajuste DUI + Transporte original). Por eso esta pestaña siempre
 // usa esos datos, sin importar qué combinación esté activa arriba.
 function baseGrupos(){ return (DATASETS.sin_dui && DATASETS.sin_dui.original && DATASETS.sin_dui.original.grupos) || {rows:[]}; }
-let GROWS = (baseGrupos().rows) || [];
+// En la opción \u00b1 Transporte, la actividad Transporte (un único grupo "TRANSPORTE") toma su venta y su costo de la planilla de Resultados \u00b1 Transporte,
+// para que aparezca también con su costo de ventas en esta pestaña. El resto de los grupos son siempre los originales.
+const _gruposRedist = {};
+function gruposSegunTransporte(){
+  const base = (baseGrupos().rows) || [];
+  if(activeTransportKey !== 'redist') return base;
+  if(_gruposRedist.rows) return _gruposRedist.rows;
+  const res = DATASETS.sin_dui.redist.resultados.data;
+  _gruposRedist.rows = base.map(r => {
+    if(r.f !== 'TRANSPORTE') return r;
+    const x = res[r.p] && res[r.p].TRANSPORTE;
+    return x ? Object.assign({}, r, { neto: x.ventas, costo: x.costo }) : r;
+  });
+  return _gruposRedist.rows;
+}
+let GROWS = gruposSegunTransporte();
 // Meses del rango que tienen datos de ventas por grupo (la planilla de grupos puede cargarse después que Resultados).
 function monthsWithGrupos(months){ const s = new Set(GROWS.map(r=>r.p)); const f = months.filter(p => s.has(p)); return f.length ? f : months; }
 const FAMILIA_COLOR = { 'COMBUSTIBLES': COLORS.amberDeep, 'LUBRICANTES': COLORS.diesel, 'OTRAS MERCADERIAS': COLORS.petrol2, 'TRANSPORTE': COLORS.clay };
@@ -953,16 +968,17 @@ function barChart(id, {labels, series, stacked, height, formatTip, onBarClick, o
       barsHTML = series.map((s,si) => {
         const v = s.data[i] || 0;
         const hPct = (Math.abs(v)/range)*100;
-        const alignTop = v < 0;
-        return `<div style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:${alignTop?'flex-start':'flex-end'};">`+
-          `<div class="bar-rect" data-si="${si}" data-li="${i}" style="height:${hPct}%;background:${v<0?COLORS.alert:s.color};${barCursor}" title="${esc(s.name)} · ${esc(lb)}: ${esc(formatTip(v))}${onBarClick?' (clic para filtrar)':''}"></div></div>`;
-      }).join('');
+        // todas las barras parten de la línea del cero: las positivas suben y las negativas bajan
+        const pos = v < 0 ? `top:${zeroPct}%;border-radius:0 0 2px 2px;` : `bottom:${100 - zeroPct}%;`;
+        return `<div style="flex:1;height:100%;position:relative;">`+
+          `<div class="bar-rect" data-si="${si}" data-li="${i}" style="position:absolute;left:0;right:0;${pos}height:${hPct}%;background:${v<0?COLORS.alert:s.color};${barCursor}" title="${esc(s.name)} · ${esc(lb)}: ${esc(formatTip(v))}${onBarClick?' (clic para filtrar)':''}"></div></div>`;
+      }).join('') + (minV < 0 ? `<div class="zero-line" style="top:${zeroPct}%;left:-7px;right:-7px;"></div>` : '');
     }
     return `<div class="bar-group"><div class="bars-row">${barsHTML}</div>
       <div class="bar-axis-lbl" data-li="${i}" style="${lblCursor}">${esc(lb)}</div></div>`;
   }).join('');
 
-  const zeroLine = (minV < 0) ? `<div class="zero-line" style="bottom:${100-zeroPct}%;"></div>` : '';
+  const zeroLine = '';   // la línea del cero se dibuja dentro de cada grupo de barras, alineada con ellas
   let html = `<div class="bars-area" style="position:relative;">${zeroLine}${cols}</div>`;
   if(series.length > 1) html += legendHTML(series.map(s => ({name:s.name, color:s.color})));
   const container = document.getElementById(id);
@@ -1443,7 +1459,7 @@ function renderGrupoConciliacion(months){
   const el = document.getElementById('grupoConcil'); if(!el) return;
   if(selectedGrupo || selectedCCG){ el.style.display = 'none'; return; }
   const act = fActividad.value;
-  const orig = DATASETS.sin_dui.original.resultados.data;   // Resultados sin ajustes de DUI ni de Transporte: la misma base que usa esta pestaña
+  const orig = DATASETS.sin_dui[activeTransportKey].resultados.data;   // Resultados sin ajustes de DUI ni de Transporte: la misma base que usa esta pestaña
   const ms = months.filter(p => GROWS.some(g => g.p === p));
   const rubs = act === 'ALL' ? RUBROS : [act];
   let vR = 0, vG = 0, cR = 0, cG = 0; const difs = [];
@@ -1457,16 +1473,23 @@ function renderGrupoConciliacion(months){
   difs.sort((a,b) => Math.abs(b.d) - Math.abs(a.d));
   const lista = difs.slice(0, 3).map(x => monthLabel(x.p) + ' \u00b7 ' + x.r + ': Resultados ' + fmtMoneyFull(x.rv) + ' vs Grupos ' + fmtMoneyFull(x.gv)
     + (x.p === '2026-04' ? ' (el grupo AJUSTES queda entero en Combustibles en Grupos, pero Resultados asigna parte a otros rubros)' : ''));
-  el.innerHTML = '<b>Conciliación con Resultados</b> (datos originales, sin DUI ni ajuste de Transporte). '
+  el.innerHTML = '<b>Conciliación con Resultados</b> (' + (activeTransportKey === 'redist' ? 'sin ajustes por DUI, con la opción \u00b1 Transporte' : 'datos originales, sin DUI ni ajuste de Transporte') + '). '
     + 'Ventas: Resultados ' + esc(fmtMoneyFull(vR)) + ' \u00b7 Grupos ' + esc(fmtMoneyFull(vG)) + ' \u00b7 diferencia ' + esc(fmtMoneyFull(vR - vG)) + esc(pc(vR, vG)) + '. '
     + 'Costo: Resultados ' + esc(fmtMoneyFull(cR)) + ' \u00b7 Grupos ' + esc(fmtMoneyFull(cG)) + ' \u00b7 diferencia ' + esc(fmtMoneyFull(cR - cG)) + esc(pc(cR, cG)) + '.'
     + (lista.length ? '<br>Mayores diferencias: ' + lista.map(esc).join(' \u2014 ') + '.' : '<br>Sin diferencias mayores a $1.000.000 en ningún mes.');
   el.style.display = '';
 }
 
+function renderGrupoNotaVista(){
+  const el = document.getElementById('grupoNotaVista'); if(!el) return;
+  el.textContent = activeTransportKey === 'redist'
+    ? 'Esta vista muestra los grupos de producto sin ajustes por DUI. La actividad de Transporte sigue la opción elegida (\u00b1 Transporte): su venta y su costo salen de la planilla de Resultados \u00b1 Transporte.'
+    : 'Esta vista muestra los datos originales, sin modificación en la actividad de Transporte y sin ajustes por DUI.';
+}
 function renderGrupos(months){
   const rows = grupoFilteredRows(months, selectedFamiliaG, selectedCCG);
   renderGrupoConciliacion(months);
+  renderGrupoNotaVista();
 
   // Nota sobre abril 2026: el grupo AJUSTES queda entero en Combustibles, pero Resultados asigna parte a otros rubros.
   const notaAbr = document.getElementById('grupoNotaAbril');
@@ -1786,6 +1809,7 @@ document.querySelectorAll('[data-tr]').forEach(btn => {
     if(key === activeTransportKey) return;
     activeTransportKey = key;
     DATA = currentDataBlob();
+    GROWS = gruposSegunTransporte();
     document.querySelectorAll('[data-tr]').forEach(b => b.classList.toggle('selected', b.dataset.tr === key));
     render();
   });
