@@ -317,6 +317,33 @@
     padding:3px 7px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   }
   .filter-chip button:hover{ background:var(--alert); }
+  /* ---- Composición de ventas y utilidad neta por rubro ---- */
+  .cx-wrap{ width:100%; }
+  .cx-legend{ display:flex; flex-wrap:wrap; gap:6px 16px; font-size:12px; color:var(--ink-soft); margin-bottom:12px; }
+  .cx-legend span{ display:inline-flex; align-items:center; gap:6px; }
+  .cx-legend i{ width:11px; height:11px; border-radius:3px; display:inline-block; }
+  .cx-row{ display:grid; grid-template-columns:150px 1fr 132px; align-items:center; gap:14px; padding:8px 0; border-bottom:1px dashed rgba(19,32,41,0.10); }
+  .cx-row.cx-total{ border-bottom:1px solid var(--line); padding-bottom:12px; margin-bottom:2px; }
+  .cx-row.cx-total .cx-name{ font-size:13.5px; }
+  .cx-name{ font-size:12.5px; font-weight:700; color:var(--ink); line-height:1.25; }
+  .cx-name[data-k]{ cursor:pointer; }
+  .cx-name[data-k]:hover{ color:var(--amber-deep); }
+  .cx-name small{ display:block; font-weight:500; color:var(--ink-soft); font-size:11px; margin-top:2px; }
+  .cx-track{ position:relative; height:30px; display:flex; background:rgba(19,32,41,0.045); border-radius:5px; }
+  .cx-track[data-k]{ cursor:pointer; }
+  .cx-seg{ height:100%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; overflow:hidden; white-space:nowrap; }
+  .cx-seg:first-child{ border-radius:5px 0 0 5px; }
+  .cx-line{ position:absolute; top:-5px; bottom:-5px; border-left:2px dashed var(--ink); opacity:.5; pointer-events:none; }
+  .cx-loss{ position:absolute; top:0; bottom:0; border:1.5px solid var(--alert); border-left:0; border-radius:0 5px 5px 0; background:repeating-linear-gradient(45deg, rgba(182,72,47,.34) 0 5px, rgba(182,72,47,.12) 5px 10px); }
+  .cx-clip{ position:absolute; right:0; top:0; bottom:0; width:24px; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:800; color:var(--alert); background:linear-gradient(90deg, rgba(255,253,247,0) 0, rgba(255,253,247,.95) 65%); border-radius:0 5px 5px 0; cursor:help; }
+  .cx-res{ text-align:right; font-size:13.5px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .cx-res small{ display:block; font-weight:500; font-size:11px; color:var(--ink-soft); margin-top:2px; }
+  .cx-res.pos{ color:var(--diesel); } .cx-res.neg{ color:var(--alert); }
+  .cx-axis{ border-bottom:0; padding:2px 0 0; }
+  .cx-axisbar{ position:relative; height:16px; font-size:10.5px; color:var(--ink-soft); }
+  .cx-axisbar span{ position:absolute; top:0; white-space:nowrap; }
+  .cx-note{ font-size:12.5px; color:var(--ink); background:rgba(232,149,47,0.10); border-left:3px solid var(--amber); border-radius:5px; padding:9px 12px; margin-top:12px; line-height:1.5; }
+  @media (max-width:760px){ .cx-row{ grid-template-columns:1fr; gap:5px; } .cx-res{ text-align:left; } .cx-axis{ display:none; } }
 </style>
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -400,17 +427,10 @@
       </div>
     </div>
 
-    <div class="grid2">
-      <div class="panel">
-        <h3>Comparativo de rubros</h3>
-        <div class="desc">Ventas y utilidad neta del período seleccionado, por rubro</div>
-        <div class="chart-wrap"><div id="chartRubroCompare" class="chartbox"></div></div>
-      </div>
-      <div class="panel">
-        <h3>Composición de la utilidad neta</h3>
-        <div class="desc">De utilidad bruta a utilidad neta — período seleccionado</div>
-        <div class="chart-wrap"><div id="chartWaterfall" class="chartbox"></div></div>
-      </div>
+    <div class="panel" style="margin-bottom:16px;">
+      <h3 id="titComposicion">De las ventas a la utilidad neta, por rubro</h3>
+      <div class="desc" id="descComposicion">Cada barra son las ventas del rubro (100%): cuánto se va en costo de ventas, en erogaciones directas y en erogaciones prorrateadas, y cuánto queda como utilidad neta. Si el rubro pierde, la barra pasa la línea del 100% y el excedente (en rojo) es la pérdida. Clic en un rubro para verlo solo.</div>
+      <div id="chartComposicion"></div>
     </div>
   </section>
 
@@ -432,8 +452,8 @@
         <div class="chart-wrap tall"><div id="chartRubroStack" class="chartbox"></div></div>
       </div>
       <div class="panel">
-        <h3>Participación por rubro</h3>
-        <div class="desc">Share de ventas en el período seleccionado · clic para filtrar</div>
+        <h3 id="titRubroDonut">Participación por rubro</h3>
+        <div class="desc" id="descRubroDonut">Share de ventas en el período seleccionado · clic para filtrar</div>
         <div class="chart-wrap tall"><div id="chartRubroDonut" class="chartbox"></div></div>
       </div>
     </div>
@@ -595,6 +615,7 @@
   <!-- ============ VISTA: CENTROS DE COSTO ============ -->
   <section class="view" id="view-centros">
     <div id="ccChipRow"></div>
+    <div class="legend-note" id="centrosScopeNote" style="display:none;max-width:none;margin:0 0 12px;"></div>
     <div class="grid2">
       <div class="panel">
         <h3>Erogaciones por centro de costo</h3>
@@ -1109,6 +1130,84 @@ function render(){
 }
 
 // ================= RESUMEN =================
+// ---- Composición de las ventas y de la utilidad neta, por rubro (reemplaza al comparativo de rubros y a la cascada) ----
+// Cada barra es el 100% de las ventas del rubro: costo de ventas + erogaciones directas + erogaciones prorrateadas + utilidad neta.
+// Si el resultado es negativo, las barras pasan la línea del 100% y el excedente se marca como pérdida.
+function composicionChart(id, {rows, onRowClick, noteExtra}){
+  const el = document.getElementById(id); if(!el) return;
+  const seg = r => {
+    const v = r.ventas;
+    const costoTot = r.costo + r.directa + r.prorr;
+    return { v, costoTot, pctCosto: v>0 ? r.costo/v*100 : 0, pctDir: v>0 ? r.directa/v*100 : 0, pctPro: v>0 ? r.prorr/v*100 : 0,
+             pctUtil: v>0 ? r.util/v*100 : 0, loss: r.util < 0 };
+  };
+  const data = rows.filter(r => r.ventas > 0 || r.costo || r.directa || r.prorr).map(r => ({ r, s: seg(r) }));
+  if(!data.length){ el.innerHTML = '<div style="padding:34px 12px;text-align:center;color:var(--ink-soft);font-size:13px;">Sin ventas ni erogaciones para esta selección.</div>'; return; }
+  const CAP = 125;   // escala máxima: si un rubro gasta mucho más de lo que vende, su barra se corta con una marca para no aplastar a las demás
+  const topTotal = Math.max(100, ...data.map(d => d.s.v>0 ? (d.s.costoTot/d.s.v*100) : 0));
+  const axisMax = Math.min(CAP, Math.ceil(topTotal/10)*10 + (topTotal>100 ? 4 : 0));
+  const W = x => (x/axisMax*100).toFixed(3) + '%';
+  const COL = { costo: COLORS.petrol2, dir: COLORS.amberDeep, pro: COLORS.amber, util: COLORS.diesel, loss: COLORS.alert };
+  const pct1 = x => (Math.round(x*10)/10).toLocaleString('es-AR', {minimumFractionDigits:1, maximumFractionDigits:1}) + '%';
+  let used = 0;
+  const seg1 = (name, val, pctV, color, dark) => {
+    const room = axisMax - used;
+    if(!(pctV > 0) || room <= 0) return '';
+    const w = Math.min(pctV, room); used += w;
+    const show = w/axisMax*100 >= 5;
+    return `<div class="cx-seg" style="width:${W(w)};background:${color};${dark?'color:#132029;':''}" title="${esc(name)}: ${esc(fmtMoneyFull(val))} \u00b7 ${esc(pct1(pctV))} de las ventas">${show ? Math.round(pctV)+'%' : ''}</div>`;
+  };
+  const rowsHtml = data.map(({r, s}) => {
+    const lineLeft = W(100);
+    const util = r.util;
+    used = 0;
+    let bar = seg1('Costo de ventas', r.costo, s.pctCosto, COL.costo)
+            + seg1('Erogaciones directas', r.directa, s.pctDir, COL.dir)
+            + seg1(r.proTxt || 'Erogaciones prorrateadas', r.prorr, s.pctPro, COL.pro, true);
+    if(!s.loss) bar += seg1('Utilidad neta', util, s.pctUtil, COL.util);
+    const totPct = s.v>0 ? s.costoTot/s.v*100 : 0, clipped = s.loss && totPct > axisMax;
+    const lossOverlay = s.loss ? `<div class="cx-loss" style="left:${W(100)};width:${W(Math.min(totPct, axisMax) - 100)};" title="P\u00e9rdida: ${esc(fmtMoneyFull(util))} \u00b7 ${esc(pct1(s.pctUtil))} de las ventas"></div>` : '';
+    const clipMark = clipped ? `<div class="cx-clip" title="La barra contin\u00faa: costos y erogaciones = ${esc(pct1(totPct))} de las ventas">\u00bb</div>` : '';
+    const cls = r.total ? 'cx-row cx-total' : 'cx-row';
+    const k = esc(r.key);
+    return `<div class="${cls}">
+      <div class="cx-name" ${onRowClick && !r.total ? `data-k="${k}" title="Clic para ver solo este rubro"` : ''}>${esc(r.label)}<small>${esc(fmtMoney(r.ventas))} de ventas</small></div>
+      <div class="cx-track"${onRowClick && !r.total ? ` data-k="${k}"` : ''}>${bar}<div class="cx-line" style="left:${lineLeft};"></div>${lossOverlay}${clipMark}</div>
+      <div class="cx-res ${util<0?'neg':'pos'}">${esc(fmtMoney(util))}<small>${s.v>0 ? esc(pct1(s.pctUtil)) + ' de las ventas' : '\u2014'}</small></div>
+    </div>`;
+  }).join('');
+  const legend = [['Costo de ventas',COL.costo],['Erogaciones directas',COL.dir],['Erogaciones prorrateadas',COL.pro],['Utilidad neta',COL.util],['P\u00e9rdida (excede las ventas)',COL.loss]]
+    .map(([n,c]) => `<span><i style="background:${c}"></i>${esc(n)}</span>`).join('');
+  // lectura rápida
+  const cmp = data.filter(d => !d.r.total && d.s.v > 0);
+  let note = '';
+  if(cmp.length > 1){
+    const best = cmp.reduce((a,b) => b.s.pctUtil > a.s.pctUtil ? b : a), losers = cmp.filter(d => d.s.loss);
+    note = `Mayor margen neto: <b>${esc(best.r.label)}</b> (${esc(pct1(best.s.pctUtil))}). ` +
+      (losers.length ? `Cierran con p\u00e9rdida: ${losers.map(d => '<b>'+esc(d.r.label)+'</b> ('+esc(pct1(d.s.pctUtil))+')').join(', ')}.` : 'Ning\u00fan rubro cierra con p\u00e9rdida en el per\u00edodo.');
+  }
+  if(noteExtra) note += (note ? ' ' : '') + esc(noteExtra);
+  el.innerHTML = `<div class="cx-wrap"><div class="cx-legend">${legend}</div>${rowsHtml}
+    <div class="cx-row cx-axis"><div></div><div class="cx-axisbar"><span style="left:0">0%</span><span style="left:${W(100)};transform:translateX(-50%)">100% = ventas</span></div><div></div></div>
+    ${note ? `<div class="cx-note">${note}</div>` : ''}</div>`;
+  if(onRowClick) el.querySelectorAll('[data-k]').forEach(n => n.addEventListener('click', () => onRowClick(n.dataset.k)));
+}
+
+// Gráfico único: de las ventas a la utilidad neta, rubro por rubro
+function renderComposicion(months, actividad){
+  const sel = (actividad && actividad !== 'ALL') ? actividad : null;
+  const mk = (key, label, total) => {
+    const f = k => sumField(key, k, months);
+    const ventas = f('ventas'), costo = f('costo'), directa = f('erog_directa'), prorr = f('erog_prorr');
+    return { key, label, total, ventas, costo, directa, prorr, util: ventas - costo - directa - prorr, proTxt: 'Erogaciones prorrateadas (General)' };
+  };
+  const rows = (sel ? [sel] : RUBROS).map(r => mk(r, r, false)).sort((a,b) => b.ventas - a.ventas);
+  if(!sel) rows.unshift(mk('TOTAL', 'TOTAL EMPRESA', true));
+  const t = document.getElementById('titComposicion');
+  if(t) t.textContent = sel ? 'De las ventas a la utilidad neta \u2014 ' + sel : 'De las ventas a la utilidad neta, por rubro';
+  composicionChart('chartComposicion', { rows, onRowClick: r => toggleRubro(r) });
+}
+
 function renderResumen(months, actividad){
   const rubro = (actividad && actividad !== 'ALL') ? actividad : 'TOTAL';
 
@@ -1155,23 +1254,7 @@ function renderResumen(months, actividad){
     onPointClick: (s,i) => filterByMonth(months[i])
   });
 
-  barChart('chartRubroCompare', {
-    labels: RUBROS,
-    series: [
-      { name:'Ventas', color: COLORS.petrol2, data: RUBROS.map(r=>sumField(r,'ventas',months)) },
-      { name:'Utilidad neta', color: COLORS.amberDeep, data: RUBROS.map(r=>sumField(r,'util_neta',months)) },
-    ]
-  });
-
-  let cum = utilBruta;
-  const wfSteps = [{ label:'Util. bruta', from:0, to:utilBruta, color:COLORS.diesel, isTotal:true }];
-  [{name:'Erog. directa (Playa/Shop/Transp.)', v:erogDirecta}, {name:'Erog. prorrateada (General)', v:erogProrr}].forEach(s => {
-    const next = cum - s.v;
-    wfSteps.push({ label:'− '+s.name, from:cum, to:next, color: COLORS.amberDeep });
-    cum = next;
-  });
-  wfSteps.push({ label:'Util. neta', from:0, to:cum, color: cum<0?COLORS.alert:COLORS.diesel, isTotal:true });
-  waterfallChart('chartWaterfall', wfSteps);
+  renderComposicion(months, actividad);
 }
 
 // ================= VENTAS POR RUBRO =================
@@ -1184,10 +1267,11 @@ function renderRubroChip(){
   if(selectedCategory) html += `<div class="filter-chip">Concepto: ${esc(selectedCategory)}<button title="Quitar filtro" onclick="window.__clearCategory()">✕</button></div>`;
   el.innerHTML = html;
 }
-window.__clearRubro = () => { selectedRubro = null; render(); };
+window.__clearRubro = () => { fActividad.value = 'ALL'; selectedRubro = null; render(); };
 
 function renderRubroStackChart(months){
-  const rubroSeries = RUBROS.map(r => ({ name:r, color: rubroColorFor(r), data: months.map(p => rget(p,r)?.ventas || 0) }));
+  const rubrosMostrar = selectedRubro ? [selectedRubro] : RUBROS;   // con una actividad elegida se muestra solo esa
+  const rubroSeries = rubrosMostrar.map(r => ({ name:r, color: rubroColorFor(r), data: months.map(p => rget(p,r)?.ventas || 0) }));
   if(rubroStackMode === 'line'){
     lineChart('chartRubroStack', {
       labels: months.map(monthLabel),
@@ -1210,11 +1294,26 @@ function renderRubros(months){
   renderRubroChip();
   renderRubroStackChart(months);
 
-  const totals = RUBROS.map(r => sumField(r, 'ventas', months));
-  donutChart('chartRubroDonut', {
-    labels: RUBROS, data: totals, colors: RUBROS.map(r=>rubroColorFor(r)), centerLabel:'ventas',
-    onSliceClick: (i) => toggleRubro(RUBROS[i])
-  });
+  const dTit = document.getElementById('titRubroDonut'), dDes = document.getElementById('descRubroDonut');
+  if(selectedRubro){
+    // con una actividad elegida: su peso en las ventas de la empresa (no se listan las demás actividades)
+    const v = sumField(selectedRubro, 'ventas', months), tot = sumField('TOTAL', 'ventas', months);
+    if(dTit) dTit.textContent = 'Peso de ' + selectedRubro + ' en las ventas';
+    if(dDes) dDes.textContent = 'Período seleccionado';
+    if(v) donutChart('chartRubroDonut', {
+      labels: [selectedRubro, 'Resto de la empresa'], data: [v, Math.max(0, tot - v)], colors: [rubroColorFor(selectedRubro), '#d8d2bd'], centerLabel:'ventas',
+      onSliceClick: (i) => { if(i === 0) toggleRubro(selectedRubro); }
+    });
+    else document.getElementById('chartRubroDonut').innerHTML = '<div style="padding:34px 12px;text-align:center;color:var(--ink-soft);font-size:13px;">Sin ventas de ' + esc(selectedRubro) + ' en el período.</div>';
+  } else {
+    const totals = RUBROS.map(r => sumField(r, 'ventas', months));
+    if(dTit) dTit.textContent = 'Participación por rubro';
+    if(dDes) dDes.textContent = 'Share de ventas en el período seleccionado · clic para filtrar';
+    donutChart('chartRubroDonut', {
+      labels: RUBROS, data: totals, colors: RUBROS.map(r=>rubroColorFor(r)), centerLabel:'ventas',
+      onSliceClick: (i) => toggleRubro(RUBROS[i])
+    });
+  }
 
   const tbody = document.querySelector('#tblRubros tbody');
   let sumV=0, sumC=0, sumUB=0, sumED=0, sumEP=0, sumUN=0;
@@ -1294,7 +1393,7 @@ function renderGrupoChip(){
   if(selectedGrupo) html += `<div class="filter-chip">Grupo: ${esc(selectedGrupo)}<button title="Quitar filtro" onclick="window.__clearGrupo()">✕</button></div>`;
   el.innerHTML = html;
 }
-window.__clearFamiliaG = () => { selectedFamiliaG = null; render(); };
+window.__clearFamiliaG = () => { fActividad.value = 'ALL'; selectedFamiliaG = null; selectedRubro = null; render(); };
 window.__clearCCG = () => { selectedCCG = null; render(); };
 window.__clearGrupo = () => { selectedGrupo = null; render(); };
 
@@ -1529,22 +1628,44 @@ function renderErogTrend(months, chartId, descId, cc){
 function renderCcChip(){
   const el = document.getElementById('ccChipRow');
   if(!el) return;
-  el.innerHTML = selectedCC
+  const act = fActividad.value;
+  const actChip = act === 'ALL' ? '' : `<div class="filter-chip">Actividad: ${esc(act.charAt(0) + act.slice(1).toLowerCase())}<button title="Quitar filtro de actividad" onclick="window.__clearActividadCentros()">✕</button></div> `;
+  el.innerHTML = actChip + (selectedCC
     ? `<div class="filter-chip">Centro de costo: ${esc(selectedCC)}<button title="Quitar filtro" onclick="window.__clearCC()">✕</button></div>`
-    : '';
+    : '');
 }
+window.__clearActividadCentros = () => { fActividad.value = 'ALL'; selectedRubro = null; render(); };
 window.__clearCC = () => { selectedCC = null; render(); };
 
 function renderCentros(months){
   renderCcChip();
 
+  // Filtro global de Actividad: se muestra el centro de costo propio de la actividad (mismo criterio que la pestaña Erogaciones)
+  const act = fActividad.value;
+  const ccAct = act === 'ALL' ? null : (RUBRO_TO_CC[act] || null);
+  const visible = act === 'ALL' ? CCS : (ccAct ? [ccAct] : []);
+  const noteEl = document.getElementById('centrosScopeNote');
+  if(noteEl){
+    if(act === 'ALL'){ noteEl.style.display = 'none'; noteEl.textContent = ''; }
+    else {
+      noteEl.textContent = ccAct
+        ? 'Mostrando actividad ' + act + ' (centro de costo ' + ccAct + '). Las erogaciones se muestran por el centro de costo propio de la actividad; General (prorrateable) no se incluye en el detalle.'
+        : act + ' no recibe erogación con asignación directa en la planilla de origen.';
+      noteEl.style.display = '';
+    }
+  }
+
   const ccTotals = {};
-  CCS.forEach(cc => { const t = totalCC(cc, months); if(t) ccTotals[cc] = t; });
+  visible.forEach(cc => { const t = totalCC(cc, months); if(t) ccTotals[cc] = t; });
   const ccLabels = Object.keys(ccTotals);
-  donutChart('chartCentroDonut', {
-    labels: ccLabels, data: ccLabels.map(k=>ccTotals[k]), colors: ccLabels.map(k=>ccColorFor(k)), centerLabel:'erogado',
-    onSliceClick: (i) => toggleCC(ccLabels[i])
-  });
+  if(ccLabels.length){
+    donutChart('chartCentroDonut', {
+      labels: ccLabels, data: ccLabels.map(k=>ccTotals[k]), colors: ccLabels.map(k=>ccColorFor(k)), centerLabel:'erogado',
+      onSliceClick: (i) => toggleCC(ccLabels[i])
+    });
+  } else {
+    document.getElementById('chartCentroDonut').innerHTML = '<div style="padding:34px 12px;text-align:center;color:var(--ink-soft);font-size:13px;">Sin erogaciones con asignación directa para esta actividad.</div>';
+  }
 
   const generalTotal = totalCC('GENERAL', months);
   const prorrKpiEl = document.getElementById('prorrateableKpis');
@@ -1553,20 +1674,20 @@ function renderCentros(months){
     prorrKpiEl.querySelectorAll('[data-cc]').forEach(el => el.addEventListener('click', () => toggleCC(el.dataset.cc)));
   }
 
-  const grand = Object.values(ccTotals).reduce((a,v)=>a+v,0) + generalTotal;
+  const grand = Object.values(ccTotals).reduce((a,v)=>a+v,0) + (act === 'ALL' ? generalTotal : 0);
   const tbody = document.querySelector('#tblCC tbody');
-  let rowsHtml = CCS.map(cc => {
+  let rowsHtml = visible.map(cc => {
     const v = ccTotals[cc] || 0;
     const hl = selectedCC === cc ? 'background:#f2ede0;' : '';
     return `<tr data-cc="${esc(cc)}" style="cursor:pointer;${hl}"><td>${esc(cc)}</td><td class="num">${fmtMoneyFull(v)}</td><td class="num">${fmtPct(grand?v/grand:0)}</td></tr>`;
   }).join('');
-  rowsHtml += `<tr data-cc="GENERAL" style="cursor:pointer;${selectedCC==='GENERAL'?'background:#f2ede0;':''}font-style:italic;color:var(--ink-soft);"><td>General (prorrateable, no es CC)</td><td class="num">${fmtMoneyFull(generalTotal)}</td><td class="num">${fmtPct(grand?generalTotal/grand:0)}</td></tr>`;
-  rowsHtml += `<tr class="total-row"><td>Total</td><td class="num">${fmtMoneyFull(grand)}</td><td class="num">100.0%</td></tr>`;
+  if(act === 'ALL') rowsHtml += `<tr data-cc="GENERAL" style="cursor:pointer;${selectedCC==='GENERAL'?'background:#f2ede0;':''}font-style:italic;color:var(--ink-soft);"><td>General (prorrateable, no es CC)</td><td class="num">${fmtMoneyFull(generalTotal)}</td><td class="num">${fmtPct(grand?generalTotal/grand:0)}</td></tr>`;
+  rowsHtml += visible.length ? `<tr class="total-row"><td>Total</td><td class="num">${fmtMoneyFull(grand)}</td><td class="num">100.0%</td></tr>` : `<tr><td colspan="3" style="text-align:center;color:var(--ink-soft);">Sin erogaciones con asignación directa para esta actividad.</td></tr>`;
   tbody.innerHTML = rowsHtml;
   tbody.querySelectorAll('tr[data-cc]').forEach(tr => tr.addEventListener('click', () => toggleCC(tr.dataset.cc)));
 
   const ccGridEl = document.getElementById('ccConceptGrid');
-  ccGridEl.innerHTML = CCS.map(cc => {
+  ccGridEl.innerHTML = (visible.length ? '' : '<div style="padding:14px;color:var(--ink-soft);font-size:13px;">Sin conceptos para esta actividad.</div>') + visible.map(cc => {
     const rows = ALL_CATS.map(c => ({ cat:c, total: esum(c, cc, months) })).filter(r=>r.total!==0).sort((a,b)=>b.total-a.total).slice(0,5);
     const card = miniHBarCardHTML(cc, ccTotals[cc]||0, rows.map(r=>r.cat), rows.map(r=>r.total), ccColorFor(cc));
     const dim = selectedCC && selectedCC !== cc;
