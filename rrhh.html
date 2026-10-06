@@ -537,6 +537,7 @@ const CONTRIB_ALL = [{"e":"El Surtidor S.A.","p":"2025-08","cc":"ADMINISTRACION"
     surtidor: [...new Set(rawFor('surtidor').map(d=>d.centro_costo))].sort(),
     estacion: [...new Set(rawFor('estacion').map(d=>d.centro_costo))].sort()
   };
+  const ALL_CC_BOTH = [...new Set([...ALL_CC.surtidor, ...ALL_CC.estacion])].sort();   // para el filtro en "Comparar empresas"
   const CC_COLOR = { surtidor:{}, estacion:{} };
   Object.keys(ALL_CC).forEach(k=>{
     ALL_CC[k].forEach((cc,i)=>{ CC_COLOR[k][cc] = COMPANIES[k].palette[i % COMPANIES[k].palette.length]; });
@@ -567,6 +568,7 @@ const CONTRIB_ALL = [{"e":"El Surtidor S.A.","p":"2025-08","cc":"ADMINISTRACION"
     desde: ALL_PERIODS[0],
     hasta: ALL_PERIODS[ALL_PERIODS.length-1],
     centrosCosto: new Set(ALL_CC.surtidor),
+    ccBoth: new Set(ALL_CC_BOTH),   // centros de costo elegidos en "Comparar empresas" (se aplican a las dos empresas)
     metric: 'legajos',
     breakdown: 'total',
     rankingKind: 'bar',
@@ -607,6 +609,8 @@ const CONTRIB_ALL = [{"e":"El Surtidor S.A.","p":"2025-08","cc":"ADMINISTRACION"
       document.querySelectorAll('.seg button').forEach(b=> b.setAttribute('aria-pressed', b===btn ? 'true':'false'));
       if (company !== 'both'){
         state.centrosCosto = new Set(ALL_CC[company]);
+      } else {
+        state.ccBoth = new Set(ALL_CC_BOTH);
       }
       state.nominaSearch = '';
       document.getElementById('fNomina').value = '';
@@ -624,8 +628,8 @@ const CONTRIB_ALL = [{"e":"El Surtidor S.A.","p":"2025-08","cc":"ADMINISTRACION"
     const block = document.getElementById('ccFilterBlock');
     const bdToggle = document.getElementById('breakdownToggle');
     if (state.company === 'both'){
-      block.classList.add('disabled');
-      document.getElementById('ccHint').textContent = 'No aplica en modo "Comparar empresas": cada empresa tiene su propia estructura de centros de costo.';
+      block.classList.remove('disabled');
+      document.getElementById('ccHint').textContent = 'Clic para ver solo ese centro de costo en las empresas que lo tengan. Clic de nuevo para volver a ver todos.';
       bdToggle.classList.add('disabled');
     } else {
       block.classList.remove('disabled');
@@ -656,15 +660,22 @@ const CONTRIB_ALL = [{"e":"El Surtidor S.A.","p":"2025-08","cc":"ADMINISTRACION"
   // ---------- centro de costo chips (isolate-on-click) ----------
   let ccChipMap = {};
   const fCCEl = document.getElementById('fCC');
+  function ccAll(){ return state.company === 'both' ? ALL_CC_BOTH : ALL_CC[state.company]; }
+  function ccSel(){ return state.company === 'both' ? state.ccBoth : state.centrosCosto; }
   function buildCCChips(){
     fCCEl.innerHTML = '';
     ccChipMap = {};
-    if (state.company === 'both') return;
-    ALL_CC[state.company].forEach(cc=>{
+    ccAll().forEach(cc=>{
       const chip = document.createElement('button');
       chip.className = 'chip active';
-      chip.innerHTML = `<span class="dot" style="background:${CC_COLOR[state.company][cc]}"></span>${ccShort(cc)}`;
-      chip.title = cc;
+      // en la comparación, un punto por cada empresa que tiene ese centro de costo
+      const dots = (state.company === 'both' ? ['surtidor','estacion'] : [state.company])
+        .filter(k=> ALL_CC[k].includes(cc))
+        .map(k=>`<span class="dot" style="background:${CC_COLOR[k][cc]}"></span>`).join('');
+      chip.innerHTML = `${dots}${ccShort(cc)}`;
+      chip.title = state.company === 'both'
+        ? cc + ' — ' + ['surtidor','estacion'].filter(k=>ALL_CC[k].includes(cc)).map(k=>COMPANIES[k].short).join(' y ')
+        : cc;
       chip.addEventListener('click', ()=> toggleCC(cc));
       ccChipMap[cc] = chip;
       fCCEl.appendChild(chip);
@@ -672,33 +683,36 @@ const CONTRIB_ALL = [{"e":"El Surtidor S.A.","p":"2025-08","cc":"ADMINISTRACION"
   }
 
   function syncCCChips(){
-    if (state.company === 'both') return;
-    ALL_CC[state.company].forEach(cc=>{
-      if (state.centrosCosto.has(cc)) ccChipMap[cc].classList.add('active');
+    const sel = ccSel();
+    ccAll().forEach(cc=>{
+      if (!ccChipMap[cc]) return;
+      if (sel.has(cc)) ccChipMap[cc].classList.add('active');
       else ccChipMap[cc].classList.remove('active');
     });
   }
 
   function toggleCC(cc){
-    const all = ALL_CC[state.company];
-    if (state.centrosCosto.size === all.length){
-      state.centrosCosto = new Set([cc]);
-    } else if (state.centrosCosto.size === 1 && state.centrosCosto.has(cc)){
-      state.centrosCosto = new Set(all);
-    } else if (state.centrosCosto.has(cc)){
-      state.centrosCosto.delete(cc);
-      if (state.centrosCosto.size === 0) state.centrosCosto = new Set(all);
+    const all = ccAll();
+    let cur = ccSel();
+    if (cur.size === all.length){
+      cur = new Set([cc]);
+    } else if (cur.size === 1 && cur.has(cc)){
+      cur = new Set(all);
+    } else if (cur.has(cc)){
+      cur.delete(cc);
+      if (cur.size === 0) cur = new Set(all);
     } else {
-      state.centrosCosto.add(cc);
+      cur.add(cc);
     }
+    if (state.company === 'both') state.ccBoth = cur; else state.centrosCosto = cur;
     syncCCChips();
     nominaPage = 0;
     render();
   }
 
   function isolateCC(cc){
-    if (state.company === 'both') return;
-    state.centrosCosto = new Set([cc]);
+    if (state.company === 'both') state.ccBoth = new Set([cc]);
+    else state.centrosCosto = new Set([cc]);
     syncCCChips();
     nominaPage = 0;
     render();
@@ -713,6 +727,7 @@ const CONTRIB_ALL = [{"e":"El Surtidor S.A.","p":"2025-08","cc":"ADMINISTRACION"
   document.getElementById('resetBtn').addEventListener('click', ()=>{
     state.desde = ALL_PERIODS[0]; state.hasta = ALL_PERIODS[ALL_PERIODS.length-1];
     if (state.company !== 'both') state.centrosCosto = new Set(ALL_CC[state.company]);
+    state.ccBoth = new Set(ALL_CC_BOTH);
     state.nominaSearch = '';
     fDesde.value = state.desde; fHasta.value = state.hasta;
     document.getElementById('fNomina').value = '';
@@ -838,7 +853,7 @@ const CONTRIB_ALL = [{"e":"El Surtidor S.A.","p":"2025-08","cc":"ADMINISTRACION"
   function getFiltered(){
     const periods = new Set(periodsInRange());
     if (state.company === 'both'){
-      return RAW_ALL.filter(d=> periods.has(d.periodo));
+      return RAW_ALL.filter(d=> periods.has(d.periodo) && state.ccBoth.has(d.centro_costo));
     }
     const companyName = COMPANIES[state.company].name;
     return RAW_ALL.filter(d=> periods.has(d.periodo) && d.empresa===companyName && state.centrosCosto.has(d.centro_costo));
@@ -1463,7 +1478,7 @@ const CONTRIB_ALL = [{"e":"El Surtidor S.A.","p":"2025-08","cc":"ADMINISTRACION"
   // ---------- contribuciones por concepto: datos ----------
   function getContribFiltered(){
     const periods = new Set(periodsInRange());
-    if (state.company === 'both') return CONTRIB_ALL.filter(r=> periods.has(r.p));
+    if (state.company === 'both') return CONTRIB_ALL.filter(r=> periods.has(r.p) && state.ccBoth.has(r.cc));
     const companyName = COMPANIES[state.company].name;
     return CONTRIB_ALL.filter(r=> periods.has(r.p) && r.e===companyName && state.centrosCosto.has(r.cc));
   }

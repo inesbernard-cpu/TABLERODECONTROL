@@ -308,6 +308,7 @@ const DATA_ALL = {"estacion":{"historico":[{"ejercicio":2020,"ventas":254088591.
     fDesde: '2024-08-07',
     fHasta: '2026-09-07',
     rubros: new Set(ALL_RUBROS.surtidor),
+    rubrosCmp: new Set(COMMON_RUBROS),   // filtro de rubro en "Comparar empresas" (rubros en común entre ambas)
     histKind: 'bar',
     rankKind: 'bar'
   };
@@ -332,6 +333,7 @@ const DATA_ALL = {"estacion":{"historico":[{"ejercicio":2020,"ventas":254088591.
       state.company = company;
       document.querySelectorAll('.seg[aria-label="Empresa"] button').forEach(b=> b.setAttribute('aria-pressed', b===btn ? 'true':'false'));
       if (company !== 'both') state.rubros = new Set(ALL_RUBROS[company]);
+      else state.rubrosCmp = new Set(COMMON_RUBROS);
       applyAccent();
       buildRubroChips();
       updateBlocksVisibility();
@@ -342,13 +344,10 @@ const DATA_ALL = {"estacion":{"historico":[{"ejercicio":2020,"ventas":254088591.
   function updateBlocksVisibility(){
     const rubroBlock = document.getElementById('rubroBlock');
     const hint = document.getElementById('rubroHint');
-    if (state.company === 'both'){
-      rubroBlock.classList.add('disabled');
-      hint.textContent = 'No aplica en modo "Comparar empresas": se muestran los rubros en común entre ambas.';
-    } else {
-      rubroBlock.classList.remove('disabled');
-      hint.textContent = 'Clic para ver solo ese rubro. Clic de nuevo para volver a ver todos.';
-    }
+    rubroBlock.classList.remove('disabled');
+    hint.textContent = state.company === 'both'
+      ? 'Clic para ver solo ese rubro en ambas empresas. Clic de nuevo para volver a ver todos. Se listan los rubros en común entre ambas.'
+      : 'Clic para ver solo ese rubro. Clic de nuevo para volver a ver todos.';
   }
 
   // ---------- ejercicio selector ----------
@@ -380,38 +379,44 @@ const DATA_ALL = {"estacion":{"historico":[{"ejercicio":2020,"ventas":254088591.
   // ---------- rubro chips ----------
   let rubroChipMap = {};
   const fRubroEl = document.getElementById('fRubro');
+  function rubroList(){ return state.company === 'both' ? COMMON_RUBROS : ALL_RUBROS[state.company]; }
+  function rubroSel(){ return state.company === 'both' ? state.rubrosCmp : state.rubros; }
   function buildRubroChips(){
     fRubroEl.innerHTML = '';
     rubroChipMap = {};
-    if (state.company === 'both') return;
-    ALL_RUBROS[state.company].forEach(r=>{
+    rubroList().forEach(r=>{
+      const color = state.company === 'both' ? RUBRO_COLOR.surtidor[r] : RUBRO_COLOR[state.company][r];
       const chip = document.createElement('button');
       chip.className = 'chip active';
-      chip.innerHTML = `<span class="dot" style="background:${RUBRO_COLOR[state.company][r]}"></span>${r}`;
+      chip.innerHTML = `<span class="dot" style="background:${color}"></span>${r}`;
       chip.addEventListener('click', ()=> toggleRubro(r));
       rubroChipMap[r] = chip;
       fRubroEl.appendChild(chip);
     });
   }
   function syncRubroChips(){
-    if (state.company === 'both') return;
-    ALL_RUBROS[state.company].forEach(r=>{
-      if (state.rubros.has(r)) rubroChipMap[r].classList.add('active');
+    const sel = rubroSel();
+    rubroList().forEach(r=>{
+      if (!rubroChipMap[r]) return;
+      if (sel.has(r)) rubroChipMap[r].classList.add('active');
       else rubroChipMap[r].classList.remove('active');
     });
   }
   function toggleRubro(r){
-    const all = ALL_RUBROS[state.company];
-    if (state.rubros.size === all.length){ state.rubros = new Set([r]); }
-    else if (state.rubros.size === 1 && state.rubros.has(r)){ state.rubros = new Set(all); }
-    else if (state.rubros.has(r)){ state.rubros.delete(r); if(state.rubros.size===0) state.rubros = new Set(all); }
-    else { state.rubros.add(r); }
+    const all = rubroList();
+    let cur = rubroSel();
+    if (cur.size === all.length){ cur = new Set([r]); }
+    else if (cur.size === 1 && cur.has(r)){ cur = new Set(all); }
+    else if (cur.has(r)){ cur.delete(r); if(cur.size===0) cur = new Set(all); }
+    else { cur.add(r); }
+    if (state.company === 'both') state.rubrosCmp = cur; else state.rubros = cur;
     syncRubroChips();
     render();
   }
   function isolateRubro(r){
-    if (state.company === 'both') return;
-    state.rubros = new Set([r]); syncRubroChips(); render();
+    if (state.company === 'both'){ if (!COMMON_RUBROS.includes(r)) return; state.rubrosCmp = new Set([r]); }
+    else state.rubros = new Set([r]);
+    syncRubroChips(); render();
   }
 
   document.getElementById('resetBtn').addEventListener('click', ()=>{
@@ -420,6 +425,7 @@ const DATA_ALL = {"estacion":{"historico":[{"ejercicio":2020,"ventas":254088591.
     fDesdeEl.value = state.fDesde; fHastaEl.value = state.fHasta;
     fHastaEl.setAttribute('min', state.fDesde); fDesdeEl.setAttribute('max', state.fHasta);
     if (state.company !== 'both') state.rubros = new Set(ALL_RUBROS[state.company]);
+    state.rubrosCmp = new Set(COMMON_RUBROS);
     document.querySelectorAll('.seg.mini button[data-ej]').forEach(b=> b.setAttribute('aria-pressed', b.dataset.ej==='both'?'true':'false'));
     syncRubroChips();
     render();
@@ -461,7 +467,8 @@ const DATA_ALL = {"estacion":{"historico":[{"ejercicio":2020,"ventas":254088591.
   }
   function getFilteredForCompany(company){
     const d = DATA_ALL[company];
-    return d.detalle.filter(row=> (state.ejercicio === 'both' || String(row.ejercicio) === state.ejercicio) && inDateRange(row));
+    const useRubros = state.company === 'both' && state.rubrosCmp.size < COMMON_RUBROS.length;   // con todos los rubros en común elegidos no se filtra
+    return d.detalle.filter(row=> (state.ejercicio === 'both' || String(row.ejercicio) === state.ejercicio) && inDateRange(row) && (!useRubros || state.rubrosCmp.has(row.rubro)));
   }
 
   // ---------- KPIs ----------
@@ -569,7 +576,7 @@ const DATA_ALL = {"estacion":{"historico":[{"ejercicio":2020,"ventas":254088591.
       const sRows = getFilteredForCompany('surtidor').filter(d=>COMMON_RUBROS.includes(d.rubro));
       const eRows = getFilteredForCompany('estacion').filter(d=>COMMON_RUBROS.includes(d.rubro));
       const sAgg = aggByRubro(sRows), eAgg = aggByRubro(eRows);
-      const labels = COMMON_RUBROS;
+      const labels = COMMON_RUBROS.filter(r=> state.rubrosCmp.has(r));   // solo los rubros elegidos
       const sData = labels.map(r=> sAgg[r]?sAgg[r].valor:0);
       const eData = labels.map(r=> eAgg[r]?eAgg[r].valor:0);
 
@@ -631,7 +638,7 @@ const DATA_ALL = {"estacion":{"historico":[{"ejercicio":2020,"ventas":254088591.
       sub.textContent = `Rubros en común entre ambas empresas`;
       const table = document.getElementById('resumenTable');
       table.querySelector('thead').innerHTML = '<tr><th>Rubro</th><th>El Surtidor</th><th>La Estación</th></tr>';
-      table.querySelector('tbody').innerHTML = COMMON_RUBROS.map(r=>{
+      table.querySelector('tbody').innerHTML = COMMON_RUBROS.filter(r=> state.rubrosCmp.has(r)).map(r=>{
         const sv = sAgg[r]?sAgg[r].valor:0, ev = eAgg[r]?eAgg[r].valor:0;
         return `<tr><td style="border-left:3px solid ${RUBRO_COLOR.surtidor[r]}; padding-left:9px;">${r}</td><td class="tabular">${fmtMoneyFull(sv)}</td><td class="tabular">${fmtMoneyFull(ev)}</td></tr>`;
       }).join('') + `<tr style="font-weight:700; border-top:2px solid var(--border);"><td>Total (rubros en común)</td><td class="tabular">${fmtMoneyFull(sTotal)}</td><td class="tabular">${fmtMoneyFull(eTotal)}</td></tr>`;

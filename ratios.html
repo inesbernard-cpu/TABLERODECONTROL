@@ -31,6 +31,18 @@ main{padding:24px 32px 48px;max-width:1180px}
 .mini button[aria-pressed=true]{background:var(--ink);color:#fff}
 .sw{width:11px;height:11px;border-radius:3px;display:inline-block}
 section{margin-bottom:34px}
+.filters{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 18px;margin-top:16px;padding-top:14px;border-top:1px solid var(--rule)}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:11px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.03em}
+.fg select,.fg input{font:inherit;font-size:13px;padding:7px 9px;border:1px solid var(--rule);border-radius:8px;background:var(--card);color:var(--ink);min-width:110px}
+.fg input{min-width:210px}
+.fg-wide{flex:1 1 380px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--rule);background:var(--card);color:var(--ink2);font:inherit;font-size:12.5px;padding:6px 11px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--a2);border-color:var(--a);color:var(--ink);font-weight:600}
+.chip:focus-visible,.reset:focus-visible{outline:2px solid var(--a);outline-offset:1px}
+.reset{font:inherit;font-size:12.5px;font-weight:600;padding:8px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);color:var(--ink2);cursor:pointer}
+.reset:hover{color:var(--ink)}
 h2{font-size:17px;font-weight:600;margin:0 0 4px}
 .note{color:var(--ink2);font-size:13px;margin:0 0 14px;max-width:720px}
 .row{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:start}
@@ -66,15 +78,22 @@ td.rn{cursor:help}
   <h1>Ratios económico-financieros 2024–2025</h1>
   <p class="sub">Ejercicios cerrados al 31 de julio. Cifras en moneda homogénea del 31/07/2025 (RT 54). Fuente: estados contables auditados, informe del 01/11/2025.</p>
   <div class="seg" role="group" aria-label="Vista">
-    <button id="b-est" aria-pressed="true" onclick="setView('est')">La Estación S.A.</button>
-    <button id="b-sur" aria-pressed="false" onclick="setView('sur')">El Surtidor S.A.</button>
-    <button id="b-cmp" aria-pressed="false" onclick="setView('cmp')">Comparar empresas</button>
+    <button id="b-sur" data-company="surtidor" aria-pressed="true" onclick="setView('sur')">El Surtidor S.A.</button>
+    <button id="b-cmp" data-company="both" aria-pressed="false" onclick="setView('cmp')">Comparar empresas</button>
+    <button id="b-est" data-company="estacion" aria-pressed="false" onclick="setView('est')">La Estación S.A.</button>
+  </div>
+  <div class="filters" id="filters" aria-label="Filtros">
+    <div class="fg"><label for="fDesde">Ejercicio desde</label><select id="fDesde"><option value="2024">2024</option><option value="2025">2025</option></select></div>
+    <div class="fg"><label for="fHasta">Hasta</label><select id="fHasta"><option value="2024">2024</option><option value="2025" selected>2025</option></select></div>
+    <div class="fg fg-wide"><label>Grupo de ratios</label><div class="chips" id="fGrupo"></div></div>
+    <div class="fg"><label for="fBuscar">Buscar ratio (en las tablas)</label><input type="search" id="fBuscar" placeholder="Ej.: liquidez, margen, ROE" autocomplete="off"></div>
+    <button type="button" class="reset" id="resetBtn">Quitar filtros</button>
   </div>
 </header>
 <main>
   <div class="kpis" id="kpis"></div>
 
-  <section>
+  <section id="sec-liq">
     <h2>Liquidez y ciclo de caja</h2>
     <p class="note">Días calculados sobre saldos de cierre (no hay balance al 31/07/2023 para promediar el 2024). El plazo de cobro incluye las ventas con tarjeta pendientes de acreditar.</p>
     <div class="row">
@@ -84,7 +103,7 @@ td.rn{cursor:help}
     </div>
   </section>
 
-  <section>
+  <section id="sec-end">
     <h2>Endeudamiento y estructura patrimonial</h2>
     <p class="note">Las deudas con partes relacionadas son dividendos pendientes de pago a socios, clasificados como pasivo no corriente.</p>
     <div class="row">
@@ -93,7 +112,7 @@ td.rn{cursor:help}
     </div>
   </section>
 
-  <section>
+  <section id="sec-ren">
     <h2>Rentabilidad</h2>
     <p class="note">En 2024 el resultado final de ambas empresas está muy influido por el RECPAM y otros resultados financieros; el resultado operativo es la referencia más limpia.</p>
     <div class="row">
@@ -102,7 +121,7 @@ td.rn{cursor:help}
     </div>
   </section>
 
-  <section>
+  <section id="sec-efi">
     <h2>Eficiencia, inversión y flujo de fondos</h2>
     <p class="note">Cobertura de intereses solo disponible para La Estación 2025 (única apertura con línea de intereses en el Anexo III). Para 2024 se muestra el interés pagado según el estado de flujo de efectivo, que es una medida de caja y no de devengamiento.</p>
     <div class="row">
@@ -174,7 +193,12 @@ const R={
   {n:'Intereses pagados según flujo de efectivo',f:d=>d.intpag,fmt:fm,k:-1,d:'Monto de intereses efectivamente pagados en el período, según el estado de flujo de efectivo.'}]
 };
 
-let view='est',charts={},kinds={'c-liq':'bar','c-cic':'bar','c-ren':'bar','c-flu':'bar','c-est':'bar'};
+const YEARS=[2024,2025];
+const F={desde:2024,hasta:2025,grupos:new Set(['liq','end','ren','efi']),q:''};
+const GR=[['liq','Liquidez y ciclo de caja'],['end','Endeudamiento y estructura'],['ren','Rentabilidad'],['efi','Eficiencia, inversión y flujo']];
+const ys=()=>YEARS.filter(y=>y>=F.desde&&y<=F.hasta);
+const nz=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+let view='sur',charts={},kinds={'c-liq':'bar','c-cic':'bar','c-ren':'bar','c-flu':'bar','c-est':'bar'};
 function ds(k,s,data){return k==='line'?{label:s.l,data,borderColor:s.c,backgroundColor:s.c,borderWidth:2,pointRadius:5,pointHoverRadius:7,tension:0,fill:false}:{label:s.l,data,backgroundColor:s.c,borderRadius:4,maxBarThickness:26};}
 function setKind(id,k){kinds[id]=k;for(const b of['bar','line'])document.getElementById(id+'-'+b).setAttribute('aria-pressed',String(k===b));render();}
 const rng=r=>{const v=[];for(const c of['est','sur'])for(const y of[2024,2025]){const x=r.f(D[c][y]);if(x!=null)v.push(x);}return[Math.min(...v),Math.max(...v)];};
@@ -190,51 +214,73 @@ function delta(r,a,b){
  return `<span class="${cls}">${t}</span>`;
 }
 function table(id,rows){
+ const Y=ys(),two=Y.length===2,q=nz(F.q.trim());
+ if(q)rows=rows.filter(r=>nz(r.n).includes(q));
+ if(!rows.length){document.getElementById(id).innerHTML='<p class="note" style="margin:0">Ningún ratio de este grupo coincide con la búsqueda.</p>';return;}
  let h;
  if(view!=='cmp'){
-  const e=D[view],a=e[2024],b=e[2025];
-  h='<table><thead><tr><th>Ratio</th><th>2024</th><th>2025</th><th>Variación</th><th></th></tr></thead><tbody>'+rows.map(r=>{const va=r.f(a),vb=r.f(b);return `<tr><td class="rn" title="${r.d}">${r.n}</td><td>${r.fmt(va)}</td><td>${r.fmt(vb)}</td><td>${delta(r,va,vb)}</td><td class="db">${dumb(r,va,vb,'#a3a79f','#177a72')}</td></tr>`;}).join('')+'</tbody></table>';
+  const e=D[view];
+  h='<table><thead><tr><th>Ratio</th>'+Y.map(y=>`<th>${y}</th>`).join('')+(two?'<th>Variación</th><th></th>':'')+'</tr></thead><tbody>'+rows.map(r=>{const v=Y.map(y=>r.f(e[y]));return `<tr><td class="rn" title="${r.d}">${r.n}</td>`+v.map(x=>`<td>${r.fmt(x)}</td>`).join('')+(two?`<td>${delta(r,v[0],v[1])}</td><td class="db">${dumb(r,v[0],v[1],'#a3a79f','#177a72')}</td>`:'')+'</tr>';}).join('')+'</tbody></table>';
  }else{
-  const e4=D.est[2024],e5=D.est[2025],s4=D.sur[2024],s5=D.sur[2025];
-  h='<table><thead><tr><th>Ratio</th><th>Estación 2024</th><th>Estación 2025</th><th></th><th>Surtidor 2024</th><th>Surtidor 2025</th><th></th></tr></thead><tbody>'+rows.map(r=>{const a=r.f(e4),b=r.f(e5),c=r.f(s4),d=r.f(s5);return `<tr><td class="rn" title="${r.d}">${r.n}</td><td>${r.fmt(a)}</td><td>${r.fmt(b)}</td><td class="db">${dumb(r,a,b,'#a3a79f','#177a72')}</td><td>${r.fmt(c)}</td><td>${r.fmt(d)}</td><td class="db">${dumb(r,c,d,'#a3a79f','#b8651d')}</td></tr>`;}).join('')+'</tbody></table>';
+  const C=[['est','Estación','#177a72'],['sur','Surtidor','#b8651d']];
+  h='<table><thead><tr><th>Ratio</th>'+C.map(c=>Y.map(y=>`<th>${c[1]} ${y}</th>`).join('')+(two?'<th></th>':'')).join('')+'</tr></thead><tbody>'+rows.map(r=>`<tr><td class="rn" title="${r.d}">${r.n}</td>`+C.map(c=>{const v=Y.map(y=>r.f(D[c[0]][y]));return v.map(x=>`<td>${r.fmt(x)}</td>`).join('')+(two?`<td class="db">${dumb(r,v[0],v[1],'#a3a79f',c[2])}</td>`:'');}).join('')+'</tr>').join('')+'</tbody></table>';
  }
  document.getElementById(id).innerHTML=h;
 }
 function legend(id,items){document.getElementById(id).innerHTML=items.map(i=>`<span><span class="sw" style="background:${i[1]}"></span>${i[0]}</span>`).join('');}
 function series(){
- return view==='cmp'?[{l:'La Estación 2024',d:D.est[2024],c:'#9ccbc5'},{l:'La Estación 2025',d:D.est[2025],c:'#177a72'},{l:'El Surtidor 2024',d:D.sur[2024],c:'#e6c49c'},{l:'El Surtidor 2025',d:D.sur[2025],c:'#b8651d'}]:[{l:'2024',d:D[view][2024],c:'#a3a79f'},{l:'2025',d:D[view][2025],c:'#177a72'}];
+ const Y=ys();
+ if(view==='cmp'){const cs=[['est','La Estación',['#9ccbc5','#177a72']],['sur','El Surtidor',['#e6c49c','#b8651d']]];return cs.flatMap(c=>Y.map(y=>({l:c[1]+' '+y,d:D[c[0]][y],c:c[2][y===2024?0:1]})));}
+ return Y.map(y=>({l:String(y),d:D[view][y],c:y===2024?'#a3a79f':'#177a72'}));
 }
 function mk(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),cfg);}
 const base=(suf,extra={})=>({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y??c.parsed.x).toFixed(2)+suf}}},scales:{x:{grid:{display:false},ticks:{color:'#8a929c',font:{size:11}}},y:{grid:{color:'#e6e8e3'},ticks:{color:'#8a929c',font:{size:11},callback:v=>v+suf}}},...extra});
 function render(){
  for(const b of['est','sur','cmp'])document.getElementById('b-'+b).setAttribute('aria-pressed',String(view===b));
- const S=series();
+ const Y=ys(),two=Y.length===2,y1=Y[Y.length-1],G=F.grupos,S=series();
+ for(const[g]of GR)document.getElementById('sec-'+g).style.display=G.has(g)?'':'none';
  let K;
- if(view!=='cmp'){const e=D[view],a=e[2024],b=e[2025];
-  K=[['Ventas 2025',fm(b.vtas),(b.vtas/a.vtas-1)],['Resultado operativo 2025',fm(b.ro),b.ro-a.ro,'m'],['Resultado del ejercicio 2025',fm(b.re),b.re-a.re,'m'],['Patrimonio neto',fm(b.pn),(b.pn/a.pn-1)],['Efectivo al cierre',fm(b.caja),(b.caja/a.caja-1)]];
-  document.getElementById('foot').textContent=NOM[view]+' · CUIT '+e.cuit+' · Ejercicio 01/08/2024 – 31/07/2025.';
- }else{const e4=D.est[2024],e5=D.est[2025],s4=D.sur[2024],s5=D.sur[2025];
-  const pr=(a,b)=>`<span class="${b>=a?'up':'dn'}">${fm(a)} → ${fm(b)}</span>`;
-  K=[['Ventas',pr(e4.vtas,e5.vtas),pr(s4.vtas,s5.vtas)],['Resultado operativo',pr(e4.ro,e5.ro),pr(s4.ro,s5.ro)],['Resultado del ejercicio',pr(e4.re,e5.re),pr(s4.re,s5.re)],['Patrimonio neto',pr(e4.pn,e5.pn),pr(s4.pn,s5.pn)],['Efectivo al cierre',pr(e4.caja,e5.caja),pr(s4.caja,s5.caja)]];
-  document.getElementById('foot').textContent='La Estación S.A. y El Surtidor S.A. · 2024 → 2025, cifras en moneda del 31/07/2025.';
+ if(view!=='cmp'){const e=D[view],b=e[y1],a=two?e[2024]:null,sf=two?'':' '+y1;
+  K=[['Ventas '+y1,fm(b.vtas),two?(b.vtas/a.vtas-1):null],['Resultado operativo '+y1,fm(b.ro),two?b.ro-a.ro:null,'m'],['Resultado del ejercicio '+y1,fm(b.re),two?b.re-a.re:null,'m'],['Patrimonio neto'+sf,fm(b.pn),two?(b.pn/a.pn-1):null],['Efectivo al cierre'+sf,fm(b.caja),two?(b.caja/a.caja-1):null]];
+  document.getElementById('foot').textContent=NOM[view]+' · CUIT '+e.cuit+' · '+(two?'Ejercicio 01/08/2024 – 31/07/2025.':(y1===2025?'Ejercicio 2025: 01/08/2024 – 31/07/2025.':'Ejercicio 2024: 01/08/2023 – 31/07/2024.'));
+ }else{const E=Y.map(y=>D.est[y]),Su=Y.map(y=>D.sur[y]);
+  const pr=(A,f)=>two?`<span class="${f(A[1])>=f(A[0])?'up':'dn'}">${fm(f(A[0]))} → ${fm(f(A[1]))}</span>`:fm(f(A[0]));
+  K=[['Ventas',pr(E,d=>d.vtas),pr(Su,d=>d.vtas)],['Resultado operativo',pr(E,d=>d.ro),pr(Su,d=>d.ro)],['Resultado del ejercicio',pr(E,d=>d.re),pr(Su,d=>d.re)],['Patrimonio neto',pr(E,d=>d.pn),pr(Su,d=>d.pn)],['Efectivo al cierre',pr(E,d=>d.caja),pr(Su,d=>d.caja)]];
+  document.getElementById('foot').textContent='La Estación S.A. y El Surtidor S.A. · '+(two?'2024 → 2025':'ejercicio '+y1)+', cifras en moneda del 31/07/2025.';
  }
  document.getElementById('kpis').innerHTML=K.map(k=>{
   if(view==='cmp')return `<div class="kpi"><p class="l">${k[0]}</p><p class="d" style="margin:0 0 2px;color:var(--ink3)">La Estación</p><p class="v" style="font-size:15px">${k[1]}</p><p class="d" style="margin:8px 0 2px;color:var(--ink3)">El Surtidor</p><p class="v" style="font-size:15px">${k[2]}</p></div>`;
   let d='';if(k[2]!=null){const c=k[2]>=0?'up':'dn';d=`<p class="d ${c}">${k[3]==='m'?(k[2]>=0?'+':'')+fm(k[2]):(k[2]>=0?'+':'')+(k[2]*100).toFixed(1)+' %'} vs 2024</p>`;}
   return `<div class="kpi"><p class="l">${k[0]}</p><p class="v">${k[1]}</p>${d}</div>`;}).join('');
- table('t-liq',R.liq);table('t-end',R.end);table('t-ren',R.ren);table('t-efi',R.efi);
+ if(G.has('liq'))table('t-liq',R.liq);if(G.has('end'))table('t-end',R.end);if(G.has('ren'))table('t-ren',R.ren);if(G.has('efi'))table('t-efi',R.efi);
  const lg=S.map(s=>[s.l,s.c]);legend('lg1',lg);legend('lg2',lg);legend('lg4',lg);legend('lg5',lg);
-
+ if(G.has('liq')){
  mk('c-liq',{type:kinds['c-liq'],data:{labels:['Liquidez corriente','Prueba ácida','Liquidez absoluta','Pasivo / PN'],datasets:S.map(s=>ds(kinds['c-liq'],s,[s.d.ac/s.d.pc,(s.d.ac-s.d.bc)/s.d.pc,(s.d.caja+s.d.inv)/s.d.pc,s.d.pt/s.d.pn].map(v=>+v.toFixed(3))))},options:base('')});
- mk('c-cic',{type:kinds['c-cic'],data:{labels:['Inventario','Cobro','Pago','Ciclo de caja'],datasets:S.map(s=>{const i=dias(s.d.bc,s.d.cmv),c=dias(s.d.deud+s.d.tc,s.d.vtas),p=dias(s.d.prov,s.d.comp);return ds(kinds['c-cic'],s,[i,c,-p,i+c-p].map(v=>Math.round(v)));})},options:base(' d')});
- const est=S.map(s=>s.d);const estLabels=view==='cmp'?['Estación 2024','Estación 2025','Surtidor 2024','Surtidor 2025']:['2024','2025'];
+ mk('c-cic',{type:kinds['c-cic'],data:{labels:['Inventario','Cobro','Pago','Ciclo de caja'],datasets:S.map(s=>{const i=dias(s.d.bc,s.d.cmv),c=dias(s.d.deud+s.d.tc,s.d.vtas),p=dias(s.d.prov,s.d.comp);return ds(kinds['c-cic'],s,[i,c,-p,i+c-p].map(v=>Math.round(v)));})},options:base(' d')});}
+ if(G.has('end')){
+ const est=S.map(s=>s.d);const estLabels=S.map(s=>s.l.replace('La Estación','Estación').replace('El Surtidor','Surtidor'));
  legend('lg3',[['Pasivo corriente','#c9737a'],['Pasivo no corriente','#e9b5b9'],['Patrimonio neto','#177a72']]);
  const ke=kinds['c-est'],stk=ke==='bar';
  const eds=(l,c,arr,r)=>ke==='line'?{label:l,data:arr,borderColor:c,backgroundColor:c,borderWidth:2,pointRadius:5,pointHoverRadius:7,tension:0,fill:false}:{label:l,data:arr,backgroundColor:c,maxBarThickness:60,...(r?{borderRadius:4}:{})};
- mk('c-est',{type:ke,data:{labels:estLabels,datasets:[eds('Pasivo corriente','#c9737a',est.map(d=>+(d.pc/d.at*100).toFixed(1))),eds('Pasivo no corriente','#e9b5b9',est.map(d=>+(d.pnc/d.at*100).toFixed(1))),eds('Patrimonio neto','#177a72',est.map(d=>+(d.pn/d.at*100).toFixed(1)),true)]},options:base(' %',{scales:{x:{stacked:stk,grid:{display:false},ticks:{color:'#8a929c'}},y:{stacked:stk,min:0,max:100,grid:{color:'#e6e8e3'},ticks:{color:'#8a929c',callback:v=>v+' %'},title:{display:true,text:'% del activo total',color:'#8a929c',font:{size:11}}}}})});
+ mk('c-est',{type:ke,data:{labels:estLabels,datasets:[eds('Pasivo corriente','#c9737a',est.map(d=>+(d.pc/d.at*100).toFixed(1))),eds('Pasivo no corriente','#e9b5b9',est.map(d=>+(d.pnc/d.at*100).toFixed(1))),eds('Patrimonio neto','#177a72',est.map(d=>+(d.pn/d.at*100).toFixed(1)),true)]},options:base(' %',{scales:{x:{stacked:stk,grid:{display:false},ticks:{color:'#8a929c'}},y:{stacked:stk,min:0,max:100,grid:{color:'#e6e8e3'},ticks:{color:'#8a929c',callback:v=>v+' %'},title:{display:true,text:'% del activo total',color:'#8a929c',font:{size:11}}}}})});}
+ if(G.has('ren'))
  mk('c-ren',{type:kinds['c-ren'],data:{labels:['Margen bruto','Margen operativo','Margen EBITDA','Margen neto','ROA','ROE'],datasets:S.map(s=>ds(kinds['c-ren'],s,[s.d.gb/s.d.vtas,s.d.ro/s.d.vtas,(s.d.ro+s.d.dep)/s.d.vtas,s.d.re/s.d.vtas,s.d.re/s.d.at,s.d.re/s.d.pn].map(v=>+(v*100).toFixed(2))))},options:base(' %')});
+ if(G.has('efi'))
  mk('c-flu',{type:kinds['c-flu'],data:{labels:['Operativo','Inversión','Financiación','Variación neta'],datasets:S.map(s=>ds(kinds['c-flu'],s,[s.d.fo,s.d.fi,s.d.ff,s.d.fo+s.d.fi+s.d.ff].map(v=>Math.round(v/1e6))))},options:base(' M',{scales:{x:{grid:{display:false},ticks:{color:'#8a929c'}},y:{grid:{color:'#e6e8e3'},ticks:{color:'#8a929c',callback:v=>(v<0?'−':'')+'$ '+Math.abs(v)+' M'},title:{display:true,text:'Flujo de efectivo (millones)',color:'#8a929c',font:{size:11}}}}})});
 }
+
+// ---------- filtros ----------
+const fDesde=document.getElementById('fDesde'),fHasta=document.getElementById('fHasta'),fBuscar=document.getElementById('fBuscar'),fGrupo=document.getElementById('fGrupo');
+GR.forEach(([g,t])=>{const b=document.createElement('button');b.type='button';b.className='chip';b.dataset.g=g;b.textContent=t;b.addEventListener('click',()=>toggleGrupo(g));fGrupo.appendChild(b);});
+function syncFiltros(){fDesde.value=String(F.desde);fHasta.value=String(F.hasta);fBuscar.value=F.q;fGrupo.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(F.grupos.has(b.dataset.g))));}
+function toggleGrupo(g){const all=GR.map(x=>x[0]);let c=F.grupos;
+ if(c.size===all.length)c=new Set([g]);else if(c.size===1&&c.has(g))c=new Set(all);else if(c.has(g)){c.delete(g);if(!c.size)c=new Set(all);}else c.add(g);
+ F.grupos=c;syncFiltros();render();}
+fDesde.addEventListener('change',()=>{F.desde=+fDesde.value;if(F.desde>F.hasta)F.hasta=F.desde;syncFiltros();render();});
+fHasta.addEventListener('change',()=>{F.hasta=+fHasta.value;if(F.hasta<F.desde)F.desde=F.hasta;syncFiltros();render();});
+fBuscar.addEventListener('input',()=>{F.q=fBuscar.value;render();});
+document.getElementById('resetBtn').addEventListener('click',()=>{F.desde=2024;F.hasta=2025;F.grupos=new Set(GR.map(x=>x[0]));F.q='';syncFiltros();render();});
+syncFiltros();
 function setView(v){view=v;render();}
 render();
 </script>
