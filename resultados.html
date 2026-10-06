@@ -93,7 +93,7 @@
 </div>
 
 <div id="singleView">
-  <iframe id="companyFrame" src="resultados_surtidor.html" title="Panel de resultados"></iframe>
+  <iframe id="companyFrame" src="resultados_surtidor.html?v=20261006-1445" title="Panel de resultados"></iframe>
 </div>
 
 <div id="compareView">
@@ -374,7 +374,7 @@ const HUB = {"periods":["2025-08","2025-09","2025-10","2025-11","2025-12","2026-
       } else {
         compareView.style.display = 'none';
         singleView.style.display = 'block';
-        const src = company === 'surtidor' ? 'resultados_surtidor.html' : 'resultados_estacion.html';
+        const src = (company === 'surtidor' ? 'resultados_surtidor.html' : 'resultados_estacion.html') + '?v=20261006-1445';   // evita que el navegador o el sitio muestren una copia vieja del panel
         if (iframe.getAttribute('src') !== src) iframe.setAttribute('src', src);
       }
     });
@@ -382,5 +382,6 @@ const HUB = {"periods":["2025-08","2025-09","2025-10","2025-11","2025-12","2026-
 })();
 
 </script>
+<div id="verStamp" style="position:fixed;left:10px;bottom:6px;z-index:50;font:11px/1.2 system-ui,sans-serif;color:#5b6a71;opacity:.8;pointer-events:none;" title="Fecha y hora de esta versión del archivo">versión 06/10/2026 14:45</div>
 </body>
 </html>
