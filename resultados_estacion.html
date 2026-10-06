@@ -463,7 +463,7 @@
         <h3>Rentabilidad por rubro</h3>
         <button type="button" class="dl-btn" onclick="downloadTableAsXls('tblRubros','rentabilidad_por_rubro.xls')">⬇ Descargar XLS</button>
       </div>
-      <div class="desc">Ventas, utilidad bruta, utilidad neta y márgenes — totales del período seleccionado. Erogaciones con asignación directa (Playa/Shop/Transporte) y erogaciones prorrateadas (General) tal como figuran en la planilla de resultados para cada rubro.</div>
+      <div class="desc">Ventas, utilidad bruta, utilidad neta y márgenes — totales del período seleccionado. Erogaciones con asignación directa (Playa a Combustibles, Shop a Otras Mercaderías, Transporte a Transporte) y erogaciones prorrateadas (el General, que se reparte entre las actividades según su participación en las ventas, mes a mes), tal como figuran en la planilla de resultados. Las pestañas Erogaciones y Centros de costo usan este mismo reparto, por eso sus totales coinciden.</div>
       <div class="scroll-y">
         <table class="data" id="tblRubros">
           <thead><tr>
@@ -495,6 +495,7 @@
     <div class="legend-note" id="grupoNotaAbril" style="display:none;margin-bottom:10px;max-width:none;border-left:3px solid #e8952f;padding-left:10px;"></div>
     <div id="grupoChipRow"></div>
     <div class="kpi-grid" id="kpiGrupos"></div>
+    <div class="cx-note" id="grupoConcil" style="margin:0 0 16px;display:none;"></div>
 
     <div class="grid2">
       <div class="panel">
@@ -634,7 +635,7 @@
         <h3>Erogaciones por centro de costo — detalle</h3>
         <button type="button" class="dl-btn" onclick="downloadTableAsXls('tblCC','erogaciones_por_centro_de_costo.xls')">⬇ Descargar XLS</button>
       </div>
-      <div class="desc">Total del período seleccionado, en $ · la fila General es un gasto prorrateable, no un centro de costo</div>
+      <div class="desc">Total del período seleccionado, en $ · la fila General es un gasto prorrateable, no un centro de costo. Con una actividad elegida se muestra su centro de costo propio más su parte del General.</div>
       <div class="scroll-y">
         <table class="data" id="tblCC">
           <thead><tr><th>Centro de costo</th><th>Total</th><th>% del total</th></tr></thead>
@@ -761,10 +762,57 @@ function totalCC(cc, months){
   months.forEach(p => ALL_CATS.forEach(cat => s += eget(p, cat, cc)));
   return s;
 }
+// ================================================================
+// MOTOR ÚNICO DE ASIGNACIÓN DE EROGACIONES
+// Resumen, Ventas por rubro, Erogaciones y Centros de costo usan este mismo reparto, por eso sus cifras coinciden con cualquier
+// actividad y período. Se calcula MES A MES (igual que la planilla de Resultados de contaduría) y el período es la suma de los meses:
+//  - Directas: Playa -> Combustibles; Shop -> Otras Mercaderías; Transporte -> Transporte. Lubricantes no tiene centro de costo propio.
+//  - General (gastos de toda la empresa, no es un centro de costo): entre todas las actividades, según sus ventas del mes.
+// ================================================================
+const ALLOC_ORIGINS = ['TRANSPORTE','PLAYA','SHOP','GENERAL'];
+const _allocCache = {};
+function allocMonth(p){
+  const key = activeDatasetKey + '|' + activeTransportKey + '|' + p;
+  if(_allocCache[key]) return _allocCache[key];
+  const v = {}; let V = 0;
+  RUBROS.forEach(r => { const x = (rget(p, r) || {}).ventas || 0; v[r] = x; V += x; });
+  const cells = {}; ALLOC_ORIGINS.forEach(cc => { let s = 0; ALL_CATS.forEach(cat => s += eget(p, cat, cc)); cells[cc] = s; });
+  return _allocCache[key] = { v, V, cells };
+}
+function originFactor(w, cc, A){
+  if(cc === 'PLAYA') return A.includes('COMBUSTIBLES') ? 1 : 0;
+  if(cc === 'SHOP') return A.includes('OTRAS MERCADERIAS') ? 1 : 0;
+  if(cc === 'TRANSPORTE') return A.includes('TRANSPORTE') ? 1 : 0;
+  return w.V > 0 ? A.reduce((s, r) => s + w.v[r], 0) / w.V : 0;   // GENERAL: por participación en las ventas
+}
+function erogAllocate(months, act){
+  const A = act === 'ALL' ? RUBROS : [act];
+  const o = { byCC: {}, directa:0, gen:0, total:0 }; ALLOC_ORIGINS.forEach(k => o.byCC[k] = 0);
+  months.forEach(p => { const w = allocMonth(p); ALLOC_ORIGINS.forEach(cc => { const amt = w.cells[cc]; if(amt) o.byCC[cc] += amt * originFactor(w, cc, A); }); });
+  o.directa = o.byCC.TRANSPORTE + o.byCC.PLAYA + o.byCC.SHOP; o.gen = o.byCC.GENERAL; o.total = o.directa + o.gen;
+  return o;
+}
+function erogAllocateByCat(months, act){
+  const A = act === 'ALL' ? RUBROS : [act]; const res = {};
+  months.forEach(p => {
+    const w = allocMonth(p);
+    ALL_CATS.forEach(cat => ALLOC_ORIGINS.forEach(cc => {
+      const amt = eget(p, cat, cc); if(!amt) return;
+      const x = amt * originFactor(w, cc, A); if(!x) return;
+      const r = res[cat] || (res[cat] = { cat, total:0, byCC:{} });
+      r.total += x; r.byCC[cc] = (r.byCC[cc] || 0) + x;
+    }));
+  });
+  return Object.values(res);
+}
+function erogCatMonth(p, cat, act){
+  const A = act === 'ALL' ? RUBROS : [act]; const w = allocMonth(p); let t = 0;
+  ALLOC_ORIGINS.forEach(cc => { const amt = eget(p, cat, cc); if(amt) t += amt * originFactor(w, cc, A); });
+  return t;
+}
 function computeTotalsByCat(cc, months){
-  const totalsByCat = ALL_CATS.map(c => ({ cat:c, total: esum(c, cc, months) })).filter(r => r.total !== 0);
-  totalsByCat.sort((a,b) => b.total - a.total);
-  return totalsByCat;
+  // Concepto por concepto, ya asignado a la actividad elegida (mismo motor que el resto de las pestañas)
+  return erogAllocateByCat(months, fActividad.value).map(r => ({ cat:r.cat, total:r.total })).filter(r => r.total !== 0).sort((a,b) => b.total - a.total);
 }
 
 // ---- Grupos de producto (VENTAS X GRUPOS) ----
@@ -1317,7 +1365,7 @@ function renderRubros(months){
 
   const tbody = document.querySelector('#tblRubros tbody');
   let sumV=0, sumC=0, sumUB=0, sumED=0, sumEP=0, sumUN=0;
-  let rows = RUBROS.map(r => {
+  let rows = (selectedRubro ? [selectedRubro] : RUBROS).map(r => {   // con una actividad elegida solo se muestra esa
     const ventas = sumField(r,'ventas',months), costo = sumField(r,'costo',months);
     const ub = sumField(r,'util_bruta',months);
     const ed = sumField(r,'erog_directa',months), ep = sumField(r,'erog_prorr',months);
@@ -1330,7 +1378,7 @@ function renderRubros(months){
       <td class="num">${fmtMoneyFull(ed)}</td><td class="num">${fmtMoneyFull(ep)}</td>
       <td class="num ${un<0?'neg':'pos'}">${fmtMoneyFull(un)}</td><td class="num ${un<0?'neg':'pos'}">${fmtPct(ventas?un/ventas:0)}</td></tr>`;
   }).join('');
-  rows += `<tr class="total-row"><td>TOTAL</td><td class="num">${fmtMoneyFull(sumV)}</td><td class="num">${fmtMoneyFull(sumC)}</td>
+  if(!selectedRubro) rows += `<tr class="total-row"><td>TOTAL</td><td class="num">${fmtMoneyFull(sumV)}</td><td class="num">${fmtMoneyFull(sumC)}</td>
     <td class="num">${fmtMoneyFull(sumUB)}</td><td class="num">${fmtPct(sumV?sumUB/sumV:0)}</td>
     <td class="num">${fmtMoneyFull(sumED)}</td><td class="num">${fmtMoneyFull(sumEP)}</td>
     <td class="num ${sumUN<0?'neg':'pos'}">${fmtMoneyFull(sumUN)}</td><td class="num ${sumUN<0?'neg':'pos'}">${fmtPct(sumV?sumUN/sumV:0)}</td></tr>`;
@@ -1344,17 +1392,10 @@ function renderRubroErogPanel(months){
   const cc = selectedRubro ? RUBRO_TO_CC[selectedRubro] : null;
   const descEl = document.getElementById('topErogRubrosDesc');
 
-  let totalsByCat;
-  if(selectedRubro && cc){
-    totalsByCat = computeTotalsByCat(cc, months);
-    if(descEl) descEl.textContent = `Top 12 conceptos · filtrado por rubro: ${selectedRubro} (centro de costo ${cc})`;
-  } else if(selectedRubro && !cc){
-    totalsByCat = [];
-    if(descEl) descEl.textContent = `${selectedRubro} no recibe erogación con asignación directa en la planilla de origen`;
-  } else {
-    totalsByCat = computeTotalsByCat(null, months);
-    if(descEl) descEl.textContent = 'Top 12 conceptos · todos los centros de costo · clic para ver su evolución';
-  }
+  const totalsByCat = computeTotalsByCat(null, months);
+  if(descEl) descEl.textContent = selectedRubro
+    ? 'Top 12 conceptos asignados a ' + selectedRubro + (cc ? ' (centro de costo ' + cc + ' + su parte del General)' : ' (su parte del General: no tiene centro de costo propio)') + ' \u00b7 clic para ver su evolución'
+    : 'Top 12 conceptos · todos los centros de costo · clic para ver su evolución';
 
   const top = totalsByCat[0] || {cat:'-', total:0};
   if(selectedCategory && !totalsByCat.find(r=>r.cat===selectedCategory)) selectedCategory = null;
@@ -1397,8 +1438,35 @@ window.__clearFamiliaG = () => { fActividad.value = 'ALL'; selectedFamiliaG = nu
 window.__clearCCG = () => { selectedCCG = null; render(); };
 window.__clearGrupo = () => { selectedGrupo = null; render(); };
 
+// Conciliación de Grupos de producto (VENTAS X GRUPOS) contra la planilla de Resultados (datos originales) para la actividad y el período elegidos
+function renderGrupoConciliacion(months){
+  const el = document.getElementById('grupoConcil'); if(!el) return;
+  if(selectedGrupo || selectedCCG){ el.style.display = 'none'; return; }
+  const act = fActividad.value;
+  const orig = DATASETS.sin_dui.original.resultados.data;   // Resultados sin ajustes de DUI ni de Transporte: la misma base que usa esta pestaña
+  const ms = months.filter(p => GROWS.some(g => g.p === p));
+  const rubs = act === 'ALL' ? RUBROS : [act];
+  let vR = 0, vG = 0, cR = 0, cG = 0; const difs = [];
+  ms.forEach(p => rubs.forEach(r => {
+    const x = orig[p] && orig[p][r]; const rv = x ? x.ventas : 0, rc = x ? x.costo : 0;
+    let gv = 0, gc = 0; GROWS.forEach(g => { if(g.p === p && g.f === r){ gv += g.neto; gc += g.costo; } });
+    vR += rv; vG += gv; cR += rc; cG += gc;
+    if(Math.abs(rv - gv) > 1e6) difs.push({ p, r, rv, gv, d: rv - gv });
+  }));
+  const pc = (a, b) => b ? ' (' + fmtPct(Math.abs(a - b) / Math.abs(b)) + ')' : '';
+  difs.sort((a,b) => Math.abs(b.d) - Math.abs(a.d));
+  const lista = difs.slice(0, 3).map(x => monthLabel(x.p) + ' \u00b7 ' + x.r + ': Resultados ' + fmtMoneyFull(x.rv) + ' vs Grupos ' + fmtMoneyFull(x.gv)
+    + (x.p === '2026-04' ? ' (el grupo AJUSTES queda entero en Combustibles en Grupos, pero Resultados asigna parte a otros rubros)' : ''));
+  el.innerHTML = '<b>Conciliación con Resultados</b> (datos originales, sin DUI ni ajuste de Transporte). '
+    + 'Ventas: Resultados ' + esc(fmtMoneyFull(vR)) + ' \u00b7 Grupos ' + esc(fmtMoneyFull(vG)) + ' \u00b7 diferencia ' + esc(fmtMoneyFull(vR - vG)) + esc(pc(vR, vG)) + '. '
+    + 'Costo: Resultados ' + esc(fmtMoneyFull(cR)) + ' \u00b7 Grupos ' + esc(fmtMoneyFull(cG)) + ' \u00b7 diferencia ' + esc(fmtMoneyFull(cR - cG)) + esc(pc(cR, cG)) + '.'
+    + (lista.length ? '<br>Mayores diferencias: ' + lista.map(esc).join(' \u2014 ') + '.' : '<br>Sin diferencias mayores a $1.000.000 en ningún mes.');
+  el.style.display = '';
+}
+
 function renderGrupos(months){
   const rows = grupoFilteredRows(months, selectedFamiliaG, selectedCCG);
+  renderGrupoConciliacion(months);
 
   // Nota sobre abril 2026: el grupo AJUSTES queda entero en Combustibles, pero Resultados asigna parte a otros rubros.
   const notaAbr = document.getElementById('grupoNotaAbril');
@@ -1616,10 +1684,10 @@ function renderErogTrend(months, chartId, descId, cc){
     lineChart(chartId, { labels: months.map(monthLabel), series: [{ name:'', color: COLORS.alert, area:true, data: months.map(()=>0) }], height: 360 });
     return;
   }
-  if(descEl) descEl.textContent = 'Concepto: ' + selectedCategory + (cc ? ` · centro de costo ${cc}` : '');
+  if(descEl) descEl.textContent = 'Concepto: ' + selectedCategory + (fActividad.value !== 'ALL' ? ' · asignado a ' + fActividad.value : '');
   lineChart(chartId, {
     labels: months.map(monthLabel),
-    series: [{ name: selectedCategory, color: COLORS.alert, area:true, data: months.map(p => eget(p, selectedCategory, cc)) }],
+    series: [{ name: selectedCategory, color: COLORS.alert, area:true, data: months.map(p => erogCatMonth(p, selectedCategory, fActividad.value)) }],
     height: 360
   });
 }
@@ -1639,57 +1707,52 @@ window.__clearCC = () => { selectedCC = null; render(); };
 
 function renderCentros(months){
   renderCcChip();
-
-  // Filtro global de Actividad: se muestra el centro de costo propio de la actividad (mismo criterio que la pestaña Erogaciones)
   const act = fActividad.value;
-  const ccAct = act === 'ALL' ? null : (RUBRO_TO_CC[act] || null);
-  const visible = act === 'ALL' ? CCS : (ccAct ? [ccAct] : []);
+  const AL = erogAllocate(months, act);
+  const own = act === 'ALL' ? null : (RUBRO_TO_CC[act] || null);
   const noteEl = document.getElementById('centrosScopeNote');
   if(noteEl){
     if(act === 'ALL'){ noteEl.style.display = 'none'; noteEl.textContent = ''; }
     else {
-      noteEl.textContent = ccAct
-        ? 'Mostrando actividad ' + act + ' (centro de costo ' + ccAct + '). Las erogaciones se muestran por el centro de costo propio de la actividad; General (prorrateable) no se incluye en el detalle.'
-        : act + ' no recibe erogación con asignación directa en la planilla de origen.';
+      noteEl.textContent = 'Mostrando actividad ' + act + (own ? ' (centro de costo ' + own + ')' : ' (sin centro de costo propio)') + '. Las erogaciones están asignadas igual que en las demás pestañas: ' + (own ? 'centro de costo propio + ' : '') + 'su parte del General (prorrateado por ventas, mes a mes).';
       noteEl.style.display = '';
     }
   }
-
-  const ccTotals = {};
-  visible.forEach(cc => { const t = totalCC(cc, months); if(t) ccTotals[cc] = t; });
-  const ccLabels = Object.keys(ccTotals);
-  if(ccLabels.length){
+  const origins = ALLOC_ORIGINS.filter(c => Math.abs(AL.byCC[c]) > 0.005);
+  const ownCCs = CCS.filter(c => origins.includes(c));
+  const nm = c => c === 'GENERAL' ? 'General (prorrateable)' : c;
+  if(origins.length){
     donutChart('chartCentroDonut', {
-      labels: ccLabels, data: ccLabels.map(k=>ccTotals[k]), colors: ccLabels.map(k=>ccColorFor(k)), centerLabel:'erogado',
-      onSliceClick: (i) => toggleCC(ccLabels[i])
+      labels: origins.map(nm), data: origins.map(k => AL.byCC[k]), colors: origins.map(k => ccColorFor(k)), centerLabel:'erogado',
+      onSliceClick: (i) => toggleCC(origins[i])
     });
   } else {
-    document.getElementById('chartCentroDonut').innerHTML = '<div style="padding:34px 12px;text-align:center;color:var(--ink-soft);font-size:13px;">Sin erogaciones con asignación directa para esta actividad.</div>';
+    document.getElementById('chartCentroDonut').innerHTML = '<div style="padding:34px 12px;text-align:center;color:var(--ink-soft);font-size:13px;">Sin erogaciones para esta actividad.</div>';
   }
 
-  const generalTotal = totalCC('GENERAL', months);
   const prorrKpiEl = document.getElementById('prorrateableKpis');
   if(prorrKpiEl){
-    prorrKpiEl.innerHTML = `<div class="kpi" style="cursor:pointer;" data-cc="GENERAL"><div class="lbl">General (toda la empresa)</div><div class="val num">${esc(fmtMoney(generalTotal))}</div></div>`;
+    prorrKpiEl.innerHTML = `<div class="kpi" style="cursor:pointer;" data-cc="GENERAL"><div class="lbl">${act === 'ALL' ? 'General (toda la empresa)' : 'General asignado a ' + esc(act)}</div><div class="val num">${esc(fmtMoney(AL.byCC.GENERAL))}</div></div>`;
     prorrKpiEl.querySelectorAll('[data-cc]').forEach(el => el.addEventListener('click', () => toggleCC(el.dataset.cc)));
   }
 
-  const grand = Object.values(ccTotals).reduce((a,v)=>a+v,0) + (act === 'ALL' ? generalTotal : 0);
+  const grand = AL.total;
   const tbody = document.querySelector('#tblCC tbody');
-  let rowsHtml = visible.map(cc => {
-    const v = ccTotals[cc] || 0;
+  let rowsHtml = ownCCs.map(cc => {
+    const v = AL.byCC[cc] || 0;
     const hl = selectedCC === cc ? 'background:#f2ede0;' : '';
     return `<tr data-cc="${esc(cc)}" style="cursor:pointer;${hl}"><td>${esc(cc)}</td><td class="num">${fmtMoneyFull(v)}</td><td class="num">${fmtPct(grand?v/grand:0)}</td></tr>`;
   }).join('');
-  if(act === 'ALL') rowsHtml += `<tr data-cc="GENERAL" style="cursor:pointer;${selectedCC==='GENERAL'?'background:#f2ede0;':''}font-style:italic;color:var(--ink-soft);"><td>General (prorrateable, no es CC)</td><td class="num">${fmtMoneyFull(generalTotal)}</td><td class="num">${fmtPct(grand?generalTotal/grand:0)}</td></tr>`;
-  rowsHtml += visible.length ? `<tr class="total-row"><td>Total</td><td class="num">${fmtMoneyFull(grand)}</td><td class="num">100.0%</td></tr>` : `<tr><td colspan="3" style="text-align:center;color:var(--ink-soft);">Sin erogaciones con asignación directa para esta actividad.</td></tr>`;
+  if(Math.abs(AL.byCC.GENERAL) > 0.005) rowsHtml += `<tr data-cc="GENERAL" style="cursor:pointer;${selectedCC==='GENERAL'?'background:#f2ede0;':''}font-style:italic;color:var(--ink-soft);"><td>General (prorrateable, no es CC)</td><td class="num">${fmtMoneyFull(AL.byCC.GENERAL)}</td><td class="num">${fmtPct(grand?AL.byCC.GENERAL/grand:0)}</td></tr>`;
+  rowsHtml += origins.length ? `<tr class="total-row"><td>Total</td><td class="num">${fmtMoneyFull(grand)}</td><td class="num">100.0%</td></tr>` : `<tr><td colspan="3" style="text-align:center;color:var(--ink-soft);">Sin erogaciones para esta actividad.</td></tr>`;
   tbody.innerHTML = rowsHtml;
   tbody.querySelectorAll('tr[data-cc]').forEach(tr => tr.addEventListener('click', () => toggleCC(tr.dataset.cc)));
 
+  const cats = erogAllocateByCat(months, act);
   const ccGridEl = document.getElementById('ccConceptGrid');
-  ccGridEl.innerHTML = (visible.length ? '' : '<div style="padding:14px;color:var(--ink-soft);font-size:13px;">Sin conceptos para esta actividad.</div>') + visible.map(cc => {
-    const rows = ALL_CATS.map(c => ({ cat:c, total: esum(c, cc, months) })).filter(r=>r.total!==0).sort((a,b)=>b.total-a.total).slice(0,5);
-    const card = miniHBarCardHTML(cc, ccTotals[cc]||0, rows.map(r=>r.cat), rows.map(r=>r.total), ccColorFor(cc));
+  ccGridEl.innerHTML = (ownCCs.length ? '' : '<div style="padding:14px;color:var(--ink-soft);font-size:13px;">Esta actividad no tiene centro de costo propio: solo recibe su parte del General (detalle abajo).</div>') + ownCCs.map(cc => {
+    const rows = cats.map(r => ({ cat:r.cat, total: r.byCC[cc] || 0 })).filter(r=>r.total!==0).sort((a,b)=>b.total-a.total).slice(0,5);
+    const card = miniHBarCardHTML(cc, AL.byCC[cc]||0, rows.map(r=>r.cat), rows.map(r=>r.total), ccColorFor(cc));
     const dim = selectedCC && selectedCC !== cc;
     const hl = selectedCC === cc;
     return `<div style="cursor:pointer;${dim?'opacity:.45;':''}${hl?'outline:2px solid '+COLORS.amberDeep+';border-radius:4px;':''}" data-cc="${esc(cc)}">${card}</div>`;
@@ -1697,8 +1760,8 @@ function renderCentros(months){
   ccGridEl.querySelectorAll('[data-cc]').forEach(el => el.addEventListener('click', () => toggleCC(el.dataset.cc)));
 
   const prorrGridEl = document.getElementById('prorrConceptGrid');
-  const gRows = ALL_CATS.map(c => ({ cat:c, total: esum(c, 'GENERAL', months) })).filter(r=>r.total!==0).sort((a,b)=>b.total-a.total).slice(0,5);
-  prorrGridEl.innerHTML = miniHBarCardHTML('GENERAL', generalTotal, gRows.map(r=>r.cat), gRows.map(r=>r.total), CC_COLOR.GENERAL);
+  const gRows = cats.map(r => ({ cat:r.cat, total: r.byCC.GENERAL || 0 })).filter(r=>r.total!==0).sort((a,b)=>b.total-a.total).slice(0,5);
+  prorrGridEl.innerHTML = miniHBarCardHTML('GENERAL', AL.byCC.GENERAL, gRows.map(r=>r.cat), gRows.map(r=>r.total), CC_COLOR.GENERAL);
 }
 
 // ---------------- wire up ----------------
