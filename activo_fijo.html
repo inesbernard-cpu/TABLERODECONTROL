@@ -205,7 +205,7 @@
         <div class="panel-head">
           <div>
             <div class="panel-title" id="histTitle">Evolución histórica — Altas y Bajas de activo fijo</div>
-            <div class="panel-sub">% sobre ventas netas del ejercicio, 2020–2026</div>
+            <div class="panel-sub" id="histSub">% sobre ventas netas del ejercicio, 2020–2026</div>
           </div>
           <div class="toggle-group" id="histKindToggle">
             <button data-kind="bar" class="active">Barras</button>
@@ -512,6 +512,34 @@ const DATA_ALL = {"estacion":{"historico":[{"ejercicio":2020,"ventas":254088591.
   }
   function pointerCursor(evt, elements){ evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; }
 
+  // Serie histórica por ejercicio. Con todos los rubros elegidos es la serie completa (2020–2026, con bajas).
+  // Con rubros elegidos, las altas salen del detalle de comprobantes, que existe solo desde el primer ejercicio detallado (2025):
+  // los años anteriores solo tienen totales y las bajas tampoco se abren por rubro.
+  function historicoFor(company){
+    const base = DATA_ALL[company].historico;
+    const isBoth = state.company === 'both';
+    const sel = isBoth ? state.rubrosCmp : state.rubros;
+    const total = isBoth ? COMMON_RUBROS.length : ALL_RUBROS[company].length;
+    if (sel.size >= total) return { rows: base, filtrado: false };
+    const det = DATA_ALL[company].detalle;
+    const desde = Math.min(...det.map(r=>r.ejercicio));
+    const rows = base.filter(h=>h.ejercicio >= desde).map(h=>{
+      const altas = det.filter(r=> r.ejercicio === h.ejercicio && sel.has(r.rubro)).reduce((a,r)=>a + r.valor_neto, 0);
+      return { ejercicio:h.ejercicio, ventas:h.ventas, altas, pct_altas: h.ventas ? altas/h.ventas : 0, bajas:null, pct_bajas:null };
+    });
+    return { rows, filtrado:true, desde };
+  }
+  function histRubrosTxt(){
+    const isBoth = state.company === 'both';
+    const sel = [...(isBoth ? state.rubrosCmp : state.rubros)];
+    const total = isBoth ? COMMON_RUBROS.length : ALL_RUBROS[state.company].length;
+    return sel.length <= 3 ? sel.join(', ') : `${sel.length} de ${total} rubros`;
+  }
+  function histSubTxt(H){
+    if (!H.filtrado) return '% sobre ventas netas del ejercicio, 2020–2026';
+    return `% sobre ventas netas del ejercicio · rubros: ${histRubrosTxt()} · se muestran solo los ejercicios ${H.rows.map(r=>r.ejercicio).join(' y ')}, los únicos con detalle por rubro (de 2020 a ${H.desde-1} hay solo totales)${state.company==='both' ? '' : '; las bajas no se abren por rubro'}`;
+  }
+
   function buildHistorico(){
     const ctx = document.getElementById('chartHistorico');
     const isLine = state.histKind === 'line';
@@ -519,9 +547,12 @@ const DATA_ALL = {"estacion":{"historico":[{"ejercicio":2020,"ventas":254088591.
 
     if (state.company === 'both'){
       document.getElementById('histTitle').textContent = 'Evolución histórica comparada — Altas / Ventas';
-      const labels = DATA_ALL.surtidor.historico.map(h=>h.ejercicio);
-      const sData = DATA_ALL.surtidor.historico.map(h=>h.pct_altas*100);
-      const eData = DATA_ALL.estacion.historico.map(h=>h.pct_altas*100);
+      const HS = historicoFor('surtidor'), HE = historicoFor('estacion');
+      document.getElementById('histSub').textContent = histSubTxt(HS);
+      if (HS.filtrado) document.getElementById('histTitle').textContent = 'Evolución histórica comparada — Altas / Ventas · ' + histRubrosTxt();
+      const labels = HS.rows.map(h=>h.ejercicio);
+      const sData = HS.rows.map(h=>h.pct_altas*100);
+      const eData = HE.rows.map(h=>h.pct_altas*100);
       charts.hist = new Chart(ctx, {
         type: isLine ? 'line' : 'bar',
         data:{ labels, datasets:[
@@ -539,15 +570,18 @@ const DATA_ALL = {"estacion":{"historico":[{"ejercicio":2020,"ventas":254088591.
       return;
     }
 
-    document.getElementById('histTitle').textContent = 'Evolución histórica — Altas y Bajas de activo fijo';
-    const hist = DATA_ALL[state.company].historico;
+    const H = historicoFor(state.company);
+    const hist = H.rows;
+    document.getElementById('histTitle').textContent = H.filtrado ? 'Evolución histórica — Altas de activo fijo · ' + histRubrosTxt() : 'Evolución histórica — Altas y Bajas de activo fijo';
+    document.getElementById('histSub').textContent = histSubTxt(H);
     const labels = hist.map(h=>h.ejercicio);
     charts.hist = new Chart(ctx, {
       type: isLine ? 'line' : 'bar',
       data:{ labels, datasets:[
-        { label:'Altas / Ventas', data: hist.map(h=>h.pct_altas*100), borderColor:'#8B5E34', backgroundColor:'#8B5E34', ...commonOpts },
+        { label:'Altas / Ventas', data: hist.map(h=>h.pct_altas*100), borderColor:'#8B5E34', backgroundColor:'#8B5E34', ...commonOpts }
+      ].concat(H.filtrado ? [] : [
         { label:'Bajas / Ventas', data: hist.map(h=>h.pct_bajas*100), borderColor:'#C1443C', backgroundColor:'#C1443C', ...commonOpts }
-      ]},
+      ])},
       options:{ responsive:true, maintainAspectRatio:false,
         onHover: pointerCursor,
         onClick: (evt, els) => { if (els.length){ const ej=labels[els[0].index]; if(ej===2025||ej===2026){ state.ejercicio=String(ej); document.querySelectorAll('.seg.mini button[data-ej]').forEach(b=> b.setAttribute('aria-pressed', b.dataset.ej===String(ej)?'true':'false')); render(); } } },
@@ -729,7 +763,8 @@ const DATA_ALL = {"estacion":{"historico":[{"ejercicio":2020,"ventas":254088591.
     ws2['!cols'] = [{wch:20},{wch:14},{wch:16},{wch:12}];
     XLSX.utils.book_append_sheet(wb, ws2, 'Resumen por rubro');
 
-    const histRows = DATA_ALL[state.company].historico.map(h=>({ 'Ejercicio':h.ejercicio, 'Ventas netas':Math.round(h.ventas), 'Altas':Math.round(h.altas), '% altas s/ventas':+(h.pct_altas*100).toFixed(2), 'Bajas':Math.round(h.bajas), '% bajas s/ventas':+(h.pct_bajas*100).toFixed(2) }));
+    const _H = state.company === 'both' ? historicoFor('surtidor') : historicoFor(state.company);
+    const histRows = _H.rows.map(h=>({ 'Ejercicio':h.ejercicio, 'Ventas netas':Math.round(h.ventas), 'Altas':Math.round(h.altas), '% altas s/ventas':+(h.pct_altas*100).toFixed(2), 'Bajas':(h.bajas==null?'':Math.round(h.bajas)), '% bajas s/ventas':(h.pct_bajas==null?'':+(h.pct_bajas*100).toFixed(2)) }));
     const ws3 = XLSX.utils.json_to_sheet(histRows);
     ws3['!cols'] = [{wch:10},{wch:16},{wch:16},{wch:14},{wch:14},{wch:14}];
     XLSX.utils.book_append_sheet(wb, ws3, 'Histórico');
