@@ -213,7 +213,7 @@
         <div class="panel-head">
           <div>
             <div class="panel-title">Evolución de ventas totales (medios de pago)</div>
-            <div class="panel-sub">Enero – agosto 2026 · suma de todos los medios de pago</div>
+            <div class="panel-sub">Enero – octubre 2026 (octubre parcial) · suma de todos los medios de pago</div>
           </div>
           <div class="toggle-group" id="mediosKindToggle">
             <button data-kind="bar" class="active">Barras</button>
@@ -422,7 +422,7 @@
 </div>
 
 <script>
-const DATA = {"periods":["2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09"],"monthly":[{"periodo":"2026-01","ventas":193404953.44,"costo":49547849.65,"util_bruta":143857103.79,"pct_bruta":0.7438},{"periodo":"2026-02","ventas":185099361.05,"costo":81863153.38,"util_bruta":103236207.67,"pct_bruta":0.5577},{"periodo":"2026-03","ventas":187043680.12,"costo":62482248.28,"util_bruta":124561431.84,"pct_bruta":0.6659},{"periodo":"2026-04","ventas":182122719.65,"costo":50188233.02,"util_bruta":131934486.63,"pct_bruta":0.7244},{"periodo":"2026-05","ventas":205523673.02,"costo":57569579.6,"util_bruta":147954093.42,"pct_bruta":0.7199},{"periodo":"2026-06","ventas":197186886.07,"costo":56446223.13,"util_bruta":140740662.94,"pct_bruta":0.7137},{"periodo":"2026-07","ventas":229834572.87,"costo":65713841.04,"util_bruta":164120731.83,"pct_bruta":0.7141},{"periodo":"2026-08","ventas":222742933.31,"costo":63074541.88,"util_bruta":159668391.43,"pct_bruta":0.7168},{"periodo":"2026-09","ventas":101912959.65,"costo":29193788.44,"util_bruta":72719171.21,"pct_bruta":0.7135}]};
+const DATA = {"periods":["2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09","2026-10"],"monthly":[{"periodo":"2026-01","ventas":193404953.44,"costo":49547849.65,"util_bruta":143857103.79,"pct_bruta":0.7438},{"periodo":"2026-02","ventas":185099361.05,"costo":81863153.38,"util_bruta":103236207.67,"pct_bruta":0.5577},{"periodo":"2026-03","ventas":187043680.12,"costo":62482248.28,"util_bruta":124561431.84,"pct_bruta":0.6659},{"periodo":"2026-04","ventas":182122719.65,"costo":50188233.02,"util_bruta":131934486.63,"pct_bruta":0.7244},{"periodo":"2026-05","ventas":205523673.02,"costo":57569579.6,"util_bruta":147954093.42,"pct_bruta":0.7199},{"periodo":"2026-06","ventas":197186886.07,"costo":56446223.13,"util_bruta":140740662.94,"pct_bruta":0.7137},{"periodo":"2026-07","ventas":229834572.87,"costo":65713841.04,"util_bruta":164120731.83,"pct_bruta":0.7141},{"periodo":"2026-08","ventas":222742933.31,"costo":63074541.88,"util_bruta":159668391.43,"pct_bruta":0.7168},{"periodo":"2026-09","ventas":212491377.27,"costo":64196789.08,"util_bruta":148294588.19,"pct_bruta":0.6979},{"periodo":"2026-10","ventas":201324157.17,"costo":65885172.04,"util_bruta":135438985.13,"pct_bruta":0.6727}]};
 const VFP = {
   "2026-01": {
     "metodos": [
@@ -1444,6 +1444,249 @@ const VFP = {
     ],
     "total_importe": 269486524.23,
     "total_cant": 8374.0
+  },
+  "2026-09": {
+    "metodos": [
+      {
+        "metodo": "EFECTIVO",
+        "importe": 73759753.16,
+        "cantidad": 2645.0,
+        "promedio": 27886.49,
+        "pct": 28.7
+      },
+      {
+        "metodo": "QR POSNET",
+        "importe": 70895533.5,
+        "cantidad": 2276.0,
+        "promedio": 31149.18,
+        "pct": 27.5
+      },
+      {
+        "metodo": "MASTER DEBITO - PREP",
+        "importe": 24457240.84,
+        "cantidad": 719.0,
+        "promedio": 34015.63,
+        "pct": 9.5
+      },
+      {
+        "metodo": "VISA CREDITO",
+        "importe": 19411171.5,
+        "cantidad": 460.0,
+        "promedio": 42198.2,
+        "pct": 7.54
+      },
+      {
+        "metodo": "VISA DEBITO",
+        "importe": 15613259.0,
+        "cantidad": 465.0,
+        "promedio": 33576.9,
+        "pct": 6.07
+      },
+      {
+        "metodo": "PEDIDOS YA TARJETA",
+        "importe": 15310720.0,
+        "cantidad": 560.0,
+        "promedio": 27340.57,
+        "pct": 5.95
+      },
+      {
+        "metodo": "CTA CTE",
+        "importe": 12975549.62,
+        "cantidad": 136.0,
+        "promedio": 95408.45,
+        "pct": 5.04
+      },
+      {
+        "metodo": "MERCADO PAGO",
+        "importe": 8384751.5,
+        "cantidad": 228.0,
+        "promedio": 36775.23,
+        "pct": 3.26
+      },
+      {
+        "metodo": "CABAL",
+        "importe": 4186027.5,
+        "cantidad": 111.0,
+        "promedio": 37711.96,
+        "pct": 1.63
+      },
+      {
+        "metodo": "MASTERCARD CREDITO",
+        "importe": 4065214.0,
+        "cantidad": 109.0,
+        "promedio": 37295.54,
+        "pct": 1.58
+      },
+      {
+        "metodo": "NARANJA",
+        "importe": 3593226.5,
+        "cantidad": 76.0,
+        "promedio": 47279.3,
+        "pct": 1.4
+      },
+      {
+        "metodo": "PEDIDOS YA EFECTIVO",
+        "importe": 2786064.0,
+        "cantidad": 115.0,
+        "promedio": 24226.64,
+        "pct": 1.08
+      },
+      {
+        "metodo": "MAESTRO",
+        "importe": 1102700.0,
+        "cantidad": 33.0,
+        "promedio": 33415.15,
+        "pct": 0.43
+      },
+      {
+        "metodo": "VISA PREPAGA",
+        "importe": 715470.0,
+        "cantidad": 27.0,
+        "promedio": 26498.89,
+        "pct": 0.28
+      },
+      {
+        "metodo": "AMEX",
+        "importe": 82600.0,
+        "cantidad": 1.0,
+        "promedio": 82600.0,
+        "pct": 0.03
+      },
+      {
+        "metodo": "N.de Créd.",
+        "importe": -231300.0,
+        "cantidad": 6.0,
+        "promedio": 0.0,
+        "pct": 0.0
+      }
+    ],
+    "total_importe": 257107981.12,
+    "total_cant": 7961.0
+  },
+  "2026-10": {
+    "metodos": [
+      {
+        "metodo": "QR POSNET",
+        "importe": 75744592.0,
+        "cantidad": 2283.0,
+        "promedio": 33177.66,
+        "pct": 30.9
+      },
+      {
+        "metodo": "EFECTIVO",
+        "importe": 68006964.5,
+        "cantidad": 2378.0,
+        "promedio": 28598.39,
+        "pct": 27.8
+      },
+      {
+        "metodo": "MASTER DEBITO - PREP",
+        "importe": 21492529.0,
+        "cantidad": 644.0,
+        "promedio": 33373.49,
+        "pct": 8.78
+      },
+      {
+        "metodo": "VISA CREDITO",
+        "importe": 16651718.5,
+        "cantidad": 400.0,
+        "promedio": 41629.3,
+        "pct": 6.8
+      },
+      {
+        "metodo": "PEDIDOS YA TARJETA",
+        "importe": 14094180.0,
+        "cantidad": 513.0,
+        "promedio": 27474.04,
+        "pct": 5.76
+      },
+      {
+        "metodo": "VISA DEBITO",
+        "importe": 13792011.5,
+        "cantidad": 413.0,
+        "promedio": 33394.7,
+        "pct": 5.63
+      },
+      {
+        "metodo": "CTA CTE",
+        "importe": 12376829.21,
+        "cantidad": 134.0,
+        "promedio": 92364.4,
+        "pct": 5.05
+      },
+      {
+        "metodo": "MERCADO PAGO",
+        "importe": 9493960.0,
+        "cantidad": 241.0,
+        "promedio": 39394.02,
+        "pct": 3.88
+      },
+      {
+        "metodo": "MASTERCARD CREDITO",
+        "importe": 3366003.5,
+        "cantidad": 83.0,
+        "promedio": 40554.26,
+        "pct": 1.37
+      },
+      {
+        "metodo": "CABAL",
+        "importe": 3271994.5,
+        "cantidad": 94.0,
+        "promedio": 34808.45,
+        "pct": 1.34
+      },
+      {
+        "metodo": "PEDIDOS YA EFECTIVO",
+        "importe": 2125659.0,
+        "cantidad": 97.0,
+        "promedio": 21914.01,
+        "pct": 0.87
+      },
+      {
+        "metodo": "NARANJA",
+        "importe": 2077189.0,
+        "cantidad": 39.0,
+        "promedio": 53261.26,
+        "pct": 0.85
+      },
+      {
+        "metodo": "VISA PREPAGA",
+        "importe": 1095868.5,
+        "cantidad": 31.0,
+        "promedio": 35350.6,
+        "pct": 0.45
+      },
+      {
+        "metodo": "AMEX",
+        "importe": 733050.0,
+        "cantidad": 9.0,
+        "promedio": 81450.0,
+        "pct": 0.3
+      },
+      {
+        "metodo": "MAESTRO",
+        "importe": 535622.5,
+        "cantidad": 17.0,
+        "promedio": 31507.21,
+        "pct": 0.22
+      },
+      {
+        "metodo": ".",
+        "importe": 34200.0,
+        "cantidad": 1.0,
+        "promedio": 34200.0,
+        "pct": 0.01
+      },
+      {
+        "metodo": "N.de Créd.",
+        "importe": -1222506.53,
+        "cantidad": 13.0,
+        "promedio": 0.0,
+        "pct": 0.0
+      }
+    ],
+    "total_importe": 243669865.18,
+    "total_cant": 7377.0
   }
 };
 const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":440900.0,"costo_prom":0.0,"margen_pct":1.0},{"rubro":"POSTRES","items":78,"precio_prom":11778.82,"costo_prom":3363.99,"margen_pct":0.7144},{"rubro":"GRILLADOS","items":65,"precio_prom":8770.36,"costo_prom":2252.93,"margen_pct":0.7431},{"rubro":"CAFETERIA","items":60,"precio_prom":8651.19,"costo_prom":2822.35,"margen_pct":0.6738},{"rubro":"HORNO","items":34,"precio_prom":12888.67,"costo_prom":3641.12,"margen_pct":0.7175},{"rubro":"PASTAS","items":14,"precio_prom":14421.49,"costo_prom":2584.14,"margen_pct":0.8208},{"rubro":"BEBIDAS","items":28,"precio_prom":6717.83,"costo_prom":1857.94,"margen_pct":0.7234},{"rubro":"ENSALADAS","items":8,"precio_prom":12644.63,"costo_prom":3700.52,"margen_pct":0.7073},{"rubro":"GUARNICIONES","items":12,"precio_prom":7858.12,"costo_prom":2421.64,"margen_pct":0.6918},{"rubro":"SHELL","items":18,"precio_prom":4911.41,"costo_prom":1883.88,"margen_pct":0.6164}],"overall_margin":0.7113,"total_items":322,"valid_items":310,"lowest_margin":[{"desc":"Proteina Adicional","rubro":"GRILLADOS","precio":1818.18,"costo":2145.84,"margen":-0.1802},{"desc":"Jamon Crudo Adicional","rubro":"GRILLADOS","precio":2727.27,"costo":2899.66,"margen":-0.0632},{"desc":"Salamin Adicional","rubro":"GRILLADOS","precio":2066.12,"costo":1605.24,"margen":0.2231},{"desc":"Whisky Green Label","rubro":"BEBIDAS","precio":17851.24,"costo":13264.46,"margen":0.2569},{"desc":"Panceta Adicional","rubro":"GRILLADOS","precio":1157.02,"costo":803.78,"margen":0.3053},{"desc":"Shell Ensalada de Frutas","rubro":"SHELL","precio":3925.62,"costo":2675.58,"margen":0.3184},{"desc":"Anchoa Adicional","rubro":"GRILLADOS","precio":5289.26,"costo":3358.68,"margen":0.365},{"desc":"Cafe 1kg","rubro":"CAFETERIA","precio":64462.81,"costo":39979.2,"margen":0.3798},{"desc":"Shell Frutilla con Crema","rubro":"SHELL","precio":4855.37,"costo":2754.46,"margen":0.4327},{"desc":"Queso Crema Adicional","rubro":"GRILLADOS","precio":743.8,"costo":420.36,"margen":0.4348},{"desc":"Cheesecake Ferrero Rocher","rubro":"POSTRES","precio":29421.49,"costo":16542.89,"margen":0.4377},{"desc":"Rucula Adicional","rubro":"GRILLADOS","precio":1735.54,"costo":971.47,"margen":0.4402},{"desc":"Chopp Heineken","rubro":"BEBIDAS","precio":4462.81,"costo":2490.75,"margen":0.4419},{"desc":"Roquefort Adicional","rubro":"GRILLADOS","precio":2727.27,"costo":1413.17,"margen":0.4818},{"desc":"Dulce de Leche Postres Adicional","rubro":"POSTRES","precio":1322.31,"costo":654.2,"margen":0.5053}],"highest_margin":[{"desc":"Te / Mate Cocido","rubro":"CAFETERIA","precio":2809.92,"costo":38.35,"margen":0.9864},{"desc":"Mandioca Frita","rubro":"GUARNICIONES","precio":5619.83,"costo":192.45,"margen":0.9658},{"desc":"Arroz Adicional","rubro":"GRILLADOS","precio":1900.83,"costo":87.8,"margen":0.9538},{"desc":"Lemon Pie Porcion","rubro":"POSTRES","precio":5537.19,"costo":293.63,"margen":0.947},{"desc":"Limonada Menta y Jengibre","rubro":"BEBIDAS","precio":4710.74,"costo":260.39,"margen":0.9447},{"desc":"Cebolla Adicional","rubro":"GRILLADOS","precio":1157.02,"costo":66.43,"margen":0.9426},{"desc":"Latte Matcha","rubro":"CAFETERIA","precio":4876.03,"costo":282,"margen":0.9422},{"desc":"Tallarines","rubro":"PASTAS","precio":14462.81,"costo":846.3,"margen":0.9415},{"desc":"Omelette","rubro":"CAFETERIA","precio":6611.57,"costo":481.3,"margen":0.9272},{"desc":"Zanahoria Adicional","rubro":"GRILLADOS","precio":1157.02,"costo":87.33,"margen":0.9245},{"desc":"Milanesa de Pollo","rubro":"GRILLADOS","precio":16363.64,"costo":1379.51,"margen":0.9157},{"desc":"Arroz Blanco Solo","rubro":"GUARNICIONES","precio":2066.12,"costo":175.6,"margen":0.915},{"desc":"Lemon Pie","rubro":"POSTRES","precio":19917.36,"costo":1761.79,"margen":0.9115},{"desc":"Tomate Adicional","rubro":"GRILLADOS","precio":1487.6,"costo":132.09,"margen":0.9112},{"desc":"Marinera de Pollo","rubro":"GRILLADOS","precio":16363.64,"costo":1510.76,"margen":0.9077}],"all_items":[{"desc":"Expresso","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":2975.21,"costo":461.77,"margen":0.8448},{"desc":"Expresso Doble","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3553.72,"costo":781.6,"margen":0.7801},{"desc":"Americano","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3388.43,"costo":719.63,"margen":0.7876},{"desc":"Cortado","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3388.43,"costo":536.97,"margen":0.8415},{"desc":"Cortado Doble","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3884.3,"costo":932,"margen":0.7601},{"desc":"Cafe Irlandes","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4958.68,"costo":1851.46,"margen":0.6266},{"desc":"Cafe con Leche","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4545.45,"costo":461.77,"margen":0.8984},{"desc":"Cafe con Leche Gde","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":5123.97,"costo":1232.8,"margen":0.7594},{"desc":"Cafe con Crema","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4958.68,"costo":1157.53,"margen":0.7666},{"desc":"Cafe Puerto de Palos","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":6280.99,"costo":1262.4,"margen":0.799},{"desc":"Capuchino","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4628.1,"costo":1123.22,"margen":0.7573},{"desc":"Submarino","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4049.59,"costo":1165.6,"margen":0.7122},{"desc":"Chocolate","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3636.36,"costo":475.44,"margen":0.8693},{"desc":"Lagrima","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3884.3,"costo":762.57,"margen":0.8037},{"desc":"Lagrima Gde","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":5206.61,"costo":1150.46,"margen":0.779},{"desc":"Combo Desayuno Chipa","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":8512.4,"costo":2355.74,"margen":0.7233},{"desc":"Combo Desayuno Facturas","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":8512.4,"costo":1928.88,"margen":0.7734},{"desc":"Combo Masa Madre","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":8016.53,"costo":1541.22,"margen":0.8077},{"desc":"Te / Mate Cocido","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":2809.92,"costo":38.35,"margen":0.9864},{"desc":"Latte Matcha","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4876.03,"costo":282,"margen":0.9422},{"desc":"Cafe 1kg","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":64462.81,"costo":39979.2,"margen":0.3798},{"desc":"Cafe en Vaso Shell","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3801.65,"costo":700.59,"margen":0.8157},{"desc":"Promo Cafe + Vaso Shell","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":6446.28,"costo":3062.69,"margen":0.5249},{"desc":"Latte Avellana","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4628.1,"costo":1108.17,"margen":0.7606},{"desc":"Latte Dulce de Leche","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4628.1,"costo":1103.47,"margen":0.7616},{"desc":"Latte Caramel","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":4628.1,"costo":1013.9,"margen":0.7809},{"desc":"Frappe Caramelo","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":5123.97,"costo":1633.73,"margen":0.6812},{"desc":"Frappe Dulce de Leche","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":5123.97,"costo":1746.33,"margen":0.6592},{"desc":"Frappe Chocolate y Avellanas","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":5123.97,"costo":1509.16,"margen":0.7055},{"desc":"Panqueque Fit","rubro":"CAFETERIA","subrubro":"SALADO","precio":6859.5,"costo":2135.25,"margen":0.6887},{"desc":"Huevos Revueltos","rubro":"CAFETERIA","subrubro":"SALADO","precio":7355.37,"costo":1948.93,"margen":0.735},{"desc":"Omelette","rubro":"CAFETERIA","subrubro":"SALADO","precio":6611.57,"costo":481.3,"margen":0.9272},{"desc":"Tostadas Masa Madre","rubro":"CAFETERIA","subrubro":"SALADO","precio":2644.63,"costo":590.32,"margen":0.7768},{"desc":"Milanesa de Carne","rubro":"GRILLADOS","subrubro":"CARNES","precio":18099.17,"costo":2292.29,"margen":0.8733},{"desc":"Adicion Napolitana","rubro":"GRILLADOS","subrubro":"CARNES","precio":3140.5,"costo":1547.2,"margen":0.5073},{"desc":"Chipa","rubro":"CAFETERIA","subrubro":"SALADO","precio":37190.08,"costo":13920.29,"margen":0.6257},{"desc":"Tostadas","rubro":"CAFETERIA","subrubro":"SALADO","precio":2975.21,"costo":931.09,"margen":0.6871},{"desc":"Mbeju Clasico","rubro":"CAFETERIA","subrubro":"SALADO","precio":4958.68,"costo":723.85,"margen":0.854},{"desc":"Mbeju Jamon y Queso","rubro":"CAFETERIA","subrubro":"SALADO","precio":7438.02,"costo":2077.43,"margen":0.7207},{"desc":"Mbeju Capresse","rubro":"CAFETERIA","subrubro":"SALADO","precio":7438.02,"costo":1912.83,"margen":0.7428},{"desc":"Mbeju Pollo y Queso Azul","rubro":"CAFETERIA","subrubro":"SALADO","precio":9256.2,"costo":2958.54,"margen":0.6804},{"desc":"Factura Rellena Jamon y Queso","rubro":"CAFETERIA","subrubro":"SALADO","precio":3553.72,"costo":737,"margen":0.7926},{"desc":"Factura Rellena Jamon Crudo y Queso","rubro":"CAFETERIA","subrubro":"SALADO","precio":3636.36,"costo":1556.38,"margen":0.572},{"desc":"Factura Artesanal Rellena","rubro":"CAFETERIA","subrubro":"SALADO","precio":4380.17,"costo":2057.02,"margen":0.5304},{"desc":"Box de Desayuno","rubro":"CAFETERIA","subrubro":"SALADO","precio":38016.53,"costo":17664.86,"margen":0.5353},{"desc":"Triple Jamon y Queso","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":9090.91,"costo":2265.06,"margen":0.7508},{"desc":"Triple Crudo y Queso","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":11239.67,"costo":4769.34,"margen":0.5757},{"desc":"Triple Verduras","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":12561.98,"costo":2867.67,"margen":0.7717},{"desc":"Triple Verduras y Pollo","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":14049.59,"costo":3717.31,"margen":0.7354},{"desc":"Triple Cajita Jamon y Queso","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":9834.71,"costo":2827.23,"margen":0.7125},{"desc":"Triple Mediterraneo","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":14214.88,"costo":3051.51,"margen":0.7853},{"desc":"Arabe Jamon y Queso","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":7603.31,"costo":2188.83,"margen":0.7121},{"desc":"Arabe Crudo y Queso","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":9256.2,"costo":4547.95,"margen":0.5087},{"desc":"Arabe Capresse","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":7024.79,"costo":1600.66,"margen":0.7721},{"desc":"Bife Campestre","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":16363.64,"costo":4769.59,"margen":0.7085},{"desc":"Bife Puerto de Palos","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":14214.88,"costo":4919.27,"margen":0.6539},{"desc":"Bondiola Ranch","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":14214.88,"costo":2545.07,"margen":0.821},{"desc":"Tex Mex","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":12148.76,"costo":1930.47,"margen":0.8411},{"desc":"Club Sandwich","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":16363.64,"costo":4123.57,"margen":0.748},{"desc":"Triple Cajita Integral","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":9834.71,"costo":2077.68,"margen":0.7887},{"desc":"Triple Cajita Verduras","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":12892.56,"costo":3280.61,"margen":0.7455},{"desc":"Triple Cajita Crudo y Queso","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":11487.6,"costo":4898.51,"margen":0.5736},{"desc":"Lomito","rubro":"GRILLADOS","subrubro":"CARNES","precio":21404.96,"costo":7144.34,"margen":0.6662},{"desc":"Bife de Chorizo","rubro":"GRILLADOS","subrubro":"CARNES","precio":21404.96,"costo":5394.41,"margen":0.748},{"desc":"Bondiola de Cerdo","rubro":"GRILLADOS","subrubro":"CARNES","precio":18181.82,"costo":2178.26,"margen":0.8802},{"desc":"Pechuga de Pollo","rubro":"GRILLADOS","subrubro":"CARNES","precio":16033.06,"costo":1682.79,"margen":0.895},{"desc":"Wok de Carne","rubro":"GRILLADOS","subrubro":"CARNES","precio":18347.11,"costo":5972.95,"margen":0.6744},{"desc":"Wok de Pollo","rubro":"GRILLADOS","subrubro":"CARNES","precio":15123.97,"costo":2572.49,"margen":0.8299},{"desc":"Milanesa de Pollo","rubro":"GRILLADOS","subrubro":"CARNES","precio":16363.64,"costo":1379.51,"margen":0.9157},{"desc":"Marinera de Pollo","rubro":"GRILLADOS","subrubro":"CARNES","precio":16363.64,"costo":1510.76,"margen":0.9077},{"desc":"Pure de Papas Solo","rubro":"GUARNICIONES","subrubro":"GUARNICIONES SOLAS","precio":2892.56,"costo":709.92,"margen":0.7546},{"desc":"Pure de Calabaza Solo","rubro":"GUARNICIONES","subrubro":"GUARNICIONES SOLAS","precio":2892.56,"costo":1189.68,"margen":0.5887},{"desc":"Arroz Blanco Solo","rubro":"GUARNICIONES","subrubro":"GUARNICIONES SOLAS","precio":2066.12,"costo":175.6,"margen":0.915},{"desc":"Arroz Quesu Solo","rubro":"GUARNICIONES","subrubro":"GUARNICIONES SOLAS","precio":2892.56,"costo":1230.34,"margen":0.5747},{"desc":"Arroz Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1900.83,"costo":87.8,"margen":0.9538},{"desc":"Arroz Quesu Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":2479.34,"costo":1142.54,"margen":0.5392},{"desc":"Ensalada Cesar","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":12727.27,"costo":3301.24,"margen":0.7406},{"desc":"Ensalada Ranchera","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":11239.67,"costo":3333.22,"margen":0.7034},{"desc":"Ensalada Mediterranea","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":15785.12,"costo":4654.37,"margen":0.7051},{"desc":"Ensalada Bacon","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":13057.85,"costo":4951.48,"margen":0.6208},{"desc":"Ensalada Azul","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":12561.98,"costo":4097.31,"margen":0.6738},{"desc":"Ensalada Puerto de Palos","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":11487.6,"costo":3407.91,"margen":0.7033},{"desc":"Ensalada Tuna","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":12975.21,"costo":3771.63,"margen":0.7093},{"desc":"Hamburguesa con Queso","rubro":"GRILLADOS","subrubro":"HAMBURGUESAS","precio":6859.5,"costo":1582.74,"margen":0.7693},{"desc":"Hamburguesa Especial","rubro":"GRILLADOS","subrubro":"HAMBURGUESAS","precio":7024.79,"costo":1864.71,"margen":0.7346},{"desc":"Hamburguesa Especial con Huevo","rubro":"GRILLADOS","subrubro":"HAMBURGUESAS","precio":7768.6,"costo":2377.42,"margen":0.694},{"desc":"Hamburguesa Explosive","rubro":"GRILLADOS","subrubro":"HAMBURGUESAS","precio":8016.53,"costo":2373.41,"margen":0.7039},{"desc":"Hamburguesa Puerto de Palos","rubro":"GRILLADOS","subrubro":"HAMBURGUESAS","precio":10330.58,"costo":3423.06,"margen":0.6686},{"desc":"Cajita Feliz de Hamburguesa","rubro":"GRILLADOS","subrubro":"HAMBURGUESAS","precio":13884.3,"costo":3845.3,"margen":0.723},{"desc":"Cajita Feliz de Nuggets","rubro":"GRILLADOS","subrubro":"HAMBURGUESAS","precio":13884.3,"costo":5016.78,"margen":0.6387},{"desc":"Lomito con Queso","rubro":"GRILLADOS","subrubro":"LOMITOS","precio":11983.47,"costo":3925.1,"margen":0.6725},{"desc":"Lomito Especial","rubro":"GRILLADOS","subrubro":"LOMITOS","precio":13719.01,"costo":4517.87,"margen":0.6707},{"desc":"Lomito Especial con Huevo","rubro":"GRILLADOS","subrubro":"LOMITOS","precio":14214.88,"costo":4745.4,"margen":0.6662},{"desc":"Lomito Explosive","rubro":"GRILLADOS","subrubro":"LOMITOS","precio":15371.9,"costo":5192.43,"margen":0.6622},{"desc":"Panini de Lomito","rubro":"GRILLADOS","subrubro":"LOMITOS","precio":18842.98,"costo":6226.03,"margen":0.6696},{"desc":"Alito de Lomito","rubro":"GRILLADOS","subrubro":"LOMITOS","precio":21322.31,"costo":4172.41,"margen":0.8043},{"desc":"Pollo con Queso","rubro":"GRILLADOS","subrubro":"POLLOS","precio":9090.91,"costo":1505.84,"margen":0.8344},{"desc":"Pollo Especial","rubro":"GRILLADOS","subrubro":"POLLOS","precio":9669.42,"costo":2079.58,"margen":0.7849},{"desc":"Pollo Especial con Huevo","rubro":"GRILLADOS","subrubro":"POLLOS","precio":10826.45,"costo":2280.69,"margen":0.7893},{"desc":"Panini Pollo","rubro":"GRILLADOS","subrubro":"POLLOS","precio":16115.7,"costo":5123.27,"margen":0.6821},{"desc":"Alito de Pollo","rubro":"GRILLADOS","subrubro":"POLLOS","precio":18347.11,"costo":4339.51,"margen":0.7635},{"desc":"Nuggets","rubro":"GRILLADOS","subrubro":"POLLOS","precio":7438.02,"costo":1684.22,"margen":0.7736},{"desc":"Wrap de Ave","rubro":"PASTAS","subrubro":"PASTAS","precio":11652.89,"costo":1819.01,"margen":0.8439},{"desc":"Crepes Pollo y espinaca","rubro":"PASTAS","subrubro":"PASTAS","precio":14462.81,"costo":1613.8,"margen":0.8884},{"desc":"Crepes de Jamon y Queso","rubro":"PASTAS","subrubro":"PASTAS","precio":14462.81,"costo":1896.48,"margen":0.8689},{"desc":"Roll Lomo Graten","rubro":"PASTAS","subrubro":"PASTAS","precio":15950.41,"costo":4697.48,"margen":0.7055},{"desc":"Roll Pollo Graten","rubro":"PASTAS","subrubro":"PASTAS","precio":13719.01,"costo":2440.05,"margen":0.8221},{"desc":"Ñoquis","rubro":"PASTAS","subrubro":"PASTAS","precio":14462.81,"costo":1340.48,"margen":0.9073},{"desc":"Ravioles Ricotta y Verdura","rubro":"PASTAS","subrubro":"PASTAS","precio":15537.19,"costo":2281.6,"margen":0.8532},{"desc":"Ravioles Muzzarella y Jamon","rubro":"PASTAS","subrubro":"PASTAS","precio":15537.19,"costo":2477.88,"margen":0.8405},{"desc":"Sorrentinos 4 Quesos","rubro":"PASTAS","subrubro":"PASTAS","precio":16694.21,"costo":2576.02,"margen":0.8457},{"desc":"Tallarines","rubro":"PASTAS","subrubro":"PASTAS","precio":14462.81,"costo":846.3,"margen":0.9415},{"desc":"Wrap de Lomito","rubro":"PASTAS","subrubro":"PASTAS","precio":16115.7,"costo":5463.06,"margen":0.661},{"desc":"Wrap Vegetariano","rubro":"PASTAS","subrubro":"PASTAS","precio":11652.89,"costo":2170.61,"margen":0.8137},{"desc":"Wrap Cesar","rubro":"PASTAS","subrubro":"PASTAS","precio":11652.89,"costo":2495.77,"margen":0.7858},{"desc":"Wrap de Cerdo","rubro":"PASTAS","subrubro":"PASTAS","precio":15537.19,"costo":4059.41,"margen":0.7387},{"desc":"Empanada de Carne","rubro":"HORNO","subrubro":"EMPANADAS","precio":2892.56,"costo":891.47,"margen":0.6918},{"desc":"Empanada de Jamon y Queso","rubro":"HORNO","subrubro":"EMPANADAS","precio":2892.56,"costo":1109.2,"margen":0.6165},{"desc":"Empanada de Pollo","rubro":"HORNO","subrubro":"EMPANADAS","precio":2479.34,"costo":649.4,"margen":0.7381},{"desc":"Empanada de Humita","rubro":"HORNO","subrubro":"EMPANADAS","precio":2479.34,"costo":572.2,"margen":0.7692},{"desc":"Empanada de Espinaca y Queso","rubro":"HORNO","subrubro":"EMPANADAS","precio":2479.34,"costo":523.75,"margen":0.7888},{"desc":"Empanada de Capresse","rubro":"HORNO","subrubro":"EMPANADAS","precio":2479.34,"costo":644.03,"margen":0.7402},{"desc":"Empanada Arabe","rubro":"HORNO","subrubro":"EMPANADAS","precio":2892.56,"costo":924.05,"margen":0.6805},{"desc":"Empanada de Queso y Cebolla","rubro":"HORNO","subrubro":"EMPANADAS","precio":2892.56,"costo":1039.53,"margen":0.6406},{"desc":"Empanada de Carne Frita","rubro":"HORNO","subrubro":"EMPANADAS","precio":2892.56,"costo":891.47,"margen":0.6918},{"desc":"Empanada de Jamon y Queso Frita","rubro":"HORNO","subrubro":"EMPANADAS","precio":2892.56,"costo":1109.2,"margen":0.6165},{"desc":"Tabla de Empanadas","rubro":"HORNO","subrubro":"EMPANADAS","precio":24000,"costo":0,"margen":null},{"desc":"Empanada de Atun","rubro":"HORNO","subrubro":"EMPANADAS","precio":2479.34,"costo":689.57,"margen":0.7219},{"desc":"Papas Clasicas","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":5619.83,"costo":1392.12,"margen":0.7523},{"desc":"Papas Gratinadas","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":6859.5,"costo":2111.03,"margen":0.6922},{"desc":"Papas Cheddar y Bacon","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":6859.5,"costo":2133.55,"margen":0.689},{"desc":"Papas Rusticas","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":5950.41,"costo":2382.81,"margen":0.5996},{"desc":"Papas Noisette","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":5950.41,"costo":2026.26,"margen":0.6595},{"desc":"Mandioca Frita","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":5619.83,"costo":192.45,"margen":0.9658},{"desc":"Tabla Puerto de Palos","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":22809.92,"costo":7185.75,"margen":0.685},{"desc":"Tabla de Fiambres","rubro":"GUARNICIONES","subrubro":"FRITOS","precio":23884.3,"costo":8330.11,"margen":0.6512},{"desc":"P Muzzarella","rubro":"HORNO","subrubro":"PIZZAS","precio":18512.4,"costo":5330.81,"margen":0.712},{"desc":"P Napolitana","rubro":"HORNO","subrubro":"PIZZAS","precio":18512.4,"costo":5132.26,"margen":0.7228},{"desc":"P Fugazzeta","rubro":"HORNO","subrubro":"PIZZAS","precio":19586.78,"costo":5649.65,"margen":0.7116},{"desc":"P Muzzarella y Jamon","rubro":"HORNO","subrubro":"PIZZAS","precio":22975.21,"costo":6952.42,"margen":0.6974},{"desc":"P Jamon Anana y Palmitos","rubro":"HORNO","subrubro":"PIZZAS","precio":25206.61,"costo":7995.98,"margen":0.6828},{"desc":"P Calabresa","rubro":"HORNO","subrubro":"PIZZAS","precio":22975.21,"costo":7247.7,"margen":0.6845},{"desc":"P Cosa Nostra","rubro":"HORNO","subrubro":"PIZZAS","precio":24628.1,"costo":7580.29,"margen":0.6922},{"desc":"P Rucula y Jamon Crudo","rubro":"HORNO","subrubro":"PIZZAS","precio":25785.12,"costo":5928.78,"margen":0.7701},{"desc":"P Jamon Morron y Huevo","rubro":"HORNO","subrubro":"PIZZAS","precio":25785.12,"costo":7795.38,"margen":0.6977},{"desc":"P Waldorf","rubro":"HORNO","subrubro":"PIZZAS","precio":22396.69,"costo":6757,"margen":0.6983},{"desc":"Pizzeta Muzzarella","rubro":"HORNO","subrubro":"PIZZETAS","precio":10247.93,"costo":3203.75,"margen":0.6874},{"desc":"Pizzeta Fugazzeta","rubro":"HORNO","subrubro":"PIZZETAS","precio":10826.45,"costo":3363.17,"margen":0.6894},{"desc":"Pizzeta Napolitana","rubro":"HORNO","subrubro":"PIZZETAS","precio":10247.93,"costo":3208.06,"margen":0.687},{"desc":"Pizzeta Muzzarella y Jamon","rubro":"HORNO","subrubro":"PIZZETAS","precio":12561.98,"costo":4014.55,"margen":0.6804},{"desc":"Pizzeta Calabresa","rubro":"HORNO","subrubro":"PIZZETAS","precio":12561.98,"costo":4162.19,"margen":0.6687},{"desc":"Pizzeta Cuatro Quesos","rubro":"HORNO","subrubro":"PIZZETAS","precio":11983.47,"costo":3673.67,"margen":0.6934},{"desc":"Pizzeta Cosa Nostra","rubro":"HORNO","subrubro":"PIZZETAS","precio":13719.01,"costo":4723.02,"margen":0.6557},{"desc":"Pizzeta Rucula y Jamon Crudo","rubro":"HORNO","subrubro":"PIZZETAS","precio":14214.88,"costo":3413.41,"margen":0.7599},{"desc":"Pizzeta Jamon Morron y Huevo","rubro":"HORNO","subrubro":"PIZZETAS","precio":14214.88,"costo":3625.23,"margen":0.745},{"desc":"Pizzeta Waldorf","rubro":"HORNO","subrubro":"PIZZETAS","precio":12561.98,"costo":3922.07,"margen":0.6878},{"desc":"Pizzeta Jamon Anana y Palmitos","rubro":"HORNO","subrubro":"PIZZETAS","precio":14214.88,"costo":4804.29,"margen":0.662},{"desc":"Salamin Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":2066.12,"costo":1605.24,"margen":0.2231},{"desc":"Aceitunas Verdes Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":3057.85,"costo":838.21,"margen":0.7259},{"desc":"Grisines Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":661.16,"costo":148.76,"margen":0.775},{"desc":"Rucula Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1735.54,"costo":971.47,"margen":0.4402},{"desc":"Tomate Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1487.6,"costo":132.09,"margen":0.9112},{"desc":"Panceta Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1157.02,"costo":803.78,"margen":0.3053},{"desc":"Anchoa Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":5289.26,"costo":3358.68,"margen":0.365},{"desc":"Jamon Crudo Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":2727.27,"costo":2899.66,"margen":-0.0632},{"desc":"Jamon Cocido Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1652.89,"costo":648.64,"margen":0.6076},{"desc":"Pollo Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1900.83,"costo":615.38,"margen":0.6763},{"desc":"Roquefort Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":2727.27,"costo":1413.17,"margen":0.4818},{"desc":"Queso Crema Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":743.8,"costo":420.36,"margen":0.4348},{"desc":"Mermelada Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":900,"costo":0,"margen":null},{"desc":"Dulce de Leche Adicional","rubro":"POSTRES","subrubro":"ADICIONAL POSTRES","precio":661.16,"costo":187.48,"margen":0.7164},{"desc":"Manteca Adicional","rubro":"POSTRES","subrubro":"ADICIONAL POSTRES","precio":743.8,"costo":97.52,"margen":0.8689},{"desc":"Tomate Cherry Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":2231.41,"costo":633.48,"margen":0.7161},{"desc":"Zanahoria Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1157.02,"costo":87.33,"margen":0.9245},{"desc":"Aceitunas Negras Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":3305.79,"costo":824.38,"margen":0.7506},{"desc":"Cebolla Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1157.02,"costo":66.43,"margen":0.9426},{"desc":"Pan Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":495.87,"costo":59.73,"margen":0.8795},{"desc":"Queso Barra Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1570.25,"costo":673.98,"margen":0.5708},{"desc":"Crema Chantilly Adicional","rubro":"POSTRES","subrubro":"ADICIONAL POSTRES","precio":1157.02,"costo":422.18,"margen":0.6351},{"desc":"Dulce de Leche Postres Adicional","rubro":"POSTRES","subrubro":"ADICIONAL POSTRES","precio":1322.31,"costo":654.2,"margen":0.5053},{"desc":"Queso Sardo Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1322.31,"costo":541.54,"margen":0.5905},{"desc":"Atun Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":2561.98,"costo":1115.7,"margen":0.5645},{"desc":"Huevo Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1157.02,"costo":201.11,"margen":0.8262},{"desc":"Pan Panini Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1487.6,"costo":396.69,"margen":0.7333},{"desc":"Lechuga Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1239.67,"costo":136.36,"margen":0.89},{"desc":"Crema de Leche Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":2066.12,"costo":921.89,"margen":0.5538},{"desc":"Proteina Adicional","rubro":"GRILLADOS","subrubro":"ADICIONALES COCINA","precio":1818.18,"costo":2145.84,"margen":-0.1802},{"desc":"Tarta de Manzana","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":19421.49,"costo":5962.95,"margen":0.693},{"desc":"Tarta de Ricota","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":23140.5,"costo":4662.29,"margen":0.7985},{"desc":"Tarta de Coco y Dulce de Leche","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":19421.49,"costo":4679.42,"margen":0.7591},{"desc":"Tarta Toffe","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":24710.74,"costo":6949.85,"margen":0.7188},{"desc":"Tarta de Frutas","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":31818.18,"costo":8863.34,"margen":0.7214},{"desc":"Tarta de Frutilla","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":30082.64,"costo":8077.6,"margen":0.7315},{"desc":"Tarta de Frutilla con Pastelera","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":26611.57,"costo":5585.61,"margen":0.7901},{"desc":"Pastafrola Membrillo","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":17107.44,"costo":2698.95,"margen":0.8422},{"desc":"Lemon Pie","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":19917.36,"costo":1761.79,"margen":0.9115},{"desc":"Chocotorta","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":37024.79,"costo":13174.73,"margen":0.6442},{"desc":"Choco Oreo","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":41818.18,"costo":20232.71,"margen":0.5162},{"desc":"Cheesecake Frutos Rojos","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":24049.59,"costo":8569.59,"margen":0.6437},{"desc":"Cheesecake Maracuya","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":24049.59,"costo":9384.82,"margen":0.6098},{"desc":"Cheesecake Ferrero Rocher","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":29421.49,"costo":16542.89,"margen":0.4377},{"desc":"Torta Tiramisu","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":40909.09,"costo":11536.01,"margen":0.718},{"desc":"Torta Red Velvet Kg","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":21818.18,"costo":5976.23,"margen":0.7261},{"desc":"Torta Selva Negra Kg","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":31818.18,"costo":9255,"margen":0.7091},{"desc":"Torta Tres Leches Kg","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":22727.27,"costo":9047.17,"margen":0.6019},{"desc":"Torta Chaja Kg","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":20909.09,"costo":6608.82,"margen":0.6839},{"desc":"Torta Especial Kg","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":20909.09,"costo":7235.47,"margen":0.654},{"desc":"Torta Especial Oreo Kg","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":22727.27,"costo":10286.47,"margen":0.5474},{"desc":"Crepes Golosos","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5123.97,"costo":764.95,"margen":0.8507},{"desc":"Dulces Regionales","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":8347.11,"costo":3932.6,"margen":0.5289},{"desc":"Flan 3 Leches","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5867.77,"costo":1243.58,"margen":0.7881},{"desc":"Ensalada de Frutas","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":6280.99,"costo":2675.58,"margen":0.574},{"desc":"Red Velvet Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5123.97,"costo":1195.25,"margen":0.7667},{"desc":"Mousse de Chocolate Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5619.83,"costo":1393.47,"margen":0.752},{"desc":"Trio de Mousse","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":8181.82,"costo":2482.92,"margen":0.6965},{"desc":"Torta de Naranja Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":4710.74,"costo":597.27,"margen":0.8732},{"desc":"Torta de Limon Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":4710.74,"costo":615.7,"margen":0.8693},{"desc":"Torta de Chocolate Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5537.19,"costo":1388.39,"margen":0.7493},{"desc":"Chocotorta Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5867.77,"costo":1804.96,"margen":0.6924},{"desc":"Pastafrola Membrillo Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":4545.45,"costo":635.46,"margen":0.8602},{"desc":"Pastafrola Batata Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":4545.45,"costo":576.91,"margen":0.8731},{"desc":"Tarta de Manzana Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5702.48,"costo":1311.86,"margen":0.7699},{"desc":"Brownie Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5867.77,"costo":664.31,"margen":0.8868},{"desc":"Tarta de Ricota Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5123.97,"costo":777.05,"margen":0.8484},{"desc":"Tarta de Ricota y Dulce de Leche Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5867.77,"costo":997.05,"margen":0.8301},{"desc":"Tarta de Coco y Dulce de Leche Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5619.83,"costo":1021.7,"margen":0.8182},{"desc":"Tarta de Frutilla Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":6115.7,"costo":1281.56,"margen":0.7904},{"desc":"Tarta de Durazno Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":6115.7,"costo":914.84,"margen":0.8504},{"desc":"Tarta de Frutas Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":6115.7,"costo":2425.21,"margen":0.6034},{"desc":"Lemon Pie Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5537.19,"costo":293.63,"margen":0.947},{"desc":"Frutilla con Crema Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":7768.6,"costo":2754.46,"margen":0.6454},{"desc":"Cheesecake Frutos Rojos Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5702.48,"costo":1422.99,"margen":0.7505},{"desc":"Cheesecake Maracuya Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5702.48,"costo":1524.86,"margen":0.7326},{"desc":"Cheesecake Ferrero Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":8429.75,"costo":2705.83,"margen":0.679},{"desc":"Cheesecake Sueño de Limon Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5702.48,"costo":1242.56,"margen":0.7821},{"desc":"Tarta Toffe Porcion","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":5867.77,"costo":1333.6,"margen":0.7727},{"desc":"Mix Mini Postres","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":10247.93,"costo":2927.28,"margen":0.7144},{"desc":"Box Mini Postres","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":31404.96,"costo":8930.86,"margen":0.7156},{"desc":"Batata con Queso","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":9500,"costo":0,"margen":null},{"desc":"Membrillo con Queso","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":9500,"costo":0,"margen":null},{"desc":"Mamon con Queso","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":9500,"costo":0,"margen":null},{"desc":"Cereza con Queso","rubro":"POSTRES","subrubro":"POSTRES PORCIONES","precio":7851.24,"costo":1881.45,"margen":0.7604},{"desc":"Alfajor de Maicena Pdp","rubro":"POSTRES","subrubro":"CHOCOLATES","precio":2314.05,"costo":489.92,"margen":0.7883},{"desc":"Chopp Heineken","rubro":"BEBIDAS","subrubro":"CERVEZAS","precio":4462.81,"costo":2490.75,"margen":0.4419},{"desc":"Chopp Varios","rubro":"BEBIDAS","subrubro":"CERVEZAS","precio":5289.26,"costo":2049.25,"margen":0.6126},{"desc":"Mani - Palito Salado Porcion","rubro":"BEBIDAS","subrubro":"CERVEZAS","precio":743.8,"costo":254.59,"margen":0.6577},{"desc":"Jugo de Naranja","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":5867.77,"costo":903.72,"margen":0.846},{"desc":"Licuado de Banana","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":6859.5,"costo":1582.64,"margen":0.7693},{"desc":"Licuado Durazno con Leche","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":6859.5,"costo":1064.02,"margen":0.8449},{"desc":"Licuado con Anana con Leche","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":6859.5,"costo":1959.71,"margen":0.7143},{"desc":"Licuado Frutilla con Leche","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":6859.5,"costo":1141.17,"margen":0.8336},{"desc":"Licuado Durazno con Agua","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":6280.99,"costo":688.02,"margen":0.8905},{"desc":"Licuado Anana con Agua","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":6280.99,"costo":1583.71,"margen":0.7479},{"desc":"Licuado Frutilla con Agua","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":6280.99,"costo":765.17,"margen":0.8782},{"desc":"Licuado Tropical","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":5206.61,"costo":525.93,"margen":0.899},{"desc":"Licuado Banadu","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":5206.61,"costo":1092.05,"margen":0.7903},{"desc":"Licuado Detox","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":5206.61,"costo":1041.34,"margen":0.8},{"desc":"Limonada Menta y Jengibre","rubro":"BEBIDAS","subrubro":"JUGOS Y LICUADOS","precio":4710.74,"costo":260.39,"margen":0.9447},{"desc":"Whisky Green Label","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":17851.24,"costo":13264.46,"margen":0.2569},{"desc":"Whisky Black Lebel","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":10413.22,"costo":3012.86,"margen":0.7107},{"desc":"Whisky Red Label","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":8429.75,"costo":2355.37,"margen":0.7206},{"desc":"Caipiriña","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":6446.28,"costo":983.1,"margen":0.8475},{"desc":"Caipiroska","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":6446.28,"costo":1711.53,"margen":0.7345},{"desc":"Mojito","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":6446.28,"costo":947.06,"margen":0.8531},{"desc":"Aperol Spritz","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":7438.02,"costo":1040.68,"margen":0.8601},{"desc":"Gin Tonic","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":7933.88,"costo":2345.26,"margen":0.7044},{"desc":"Campari","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":6446.28,"costo":761.69,"margen":0.8818},{"desc":"Cuba Libre","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":6446.28,"costo":1303.7,"margen":0.7978},{"desc":"Daikiri","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":6446.28,"costo":2385.1,"margen":0.63},{"desc":"Fernet","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":6446.28,"costo":1761.82,"margen":0.7267},{"desc":"Opcion 1 Cumple","rubro":"CUMPLEAÑOS","subrubro":"OPCIONES CUMPLEAÑOS","precio":950000,"costo":0,"margen":null},{"desc":"Opcion 2 Cumple","rubro":"CUMPLEAÑOS","subrubro":"OPCIONES CUMPLEAÑOS","precio":800000,"costo":0,"margen":null},{"desc":"Opcion 3 Cumple","rubro":"CUMPLEAÑOS","subrubro":"OPCIONES CUMPLEAÑOS","precio":420000,"costo":0,"margen":null},{"desc":"Adicional Opcion 1","rubro":"CUMPLEAÑOS","subrubro":"OPCIONES CUMPLEAÑOS","precio":18000,"costo":0,"margen":null},{"desc":"Adicional Opcion 2","rubro":"CUMPLEAÑOS","subrubro":"OPCIONES CUMPLEAÑOS","precio":16500,"costo":0,"margen":null},{"desc":"TA Cheesecake Frutos Rojos","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":5702.48,"costo":1403.47,"margen":0.7539},{"desc":"TA Cheesecake Maracuya","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":5702.48,"costo":1539.73,"margen":0.73},{"desc":"TA Chocotorta","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":5702.48,"costo":1390.23,"margen":0.7562},{"desc":"TA Trio de Mousse","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":6280.99,"costo":1140.08,"margen":0.8185},{"desc":"TA Mini Oreo","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":7438.02,"costo":2077.86,"margen":0.7206},{"desc":"TA Red Velvet","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":5123.97,"costo":934.32,"margen":0.8177},{"desc":"TA Selva Negra","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":5867.77,"costo":1276.54,"margen":0.7824},{"desc":"TA Choco Oreo","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":7768.6,"costo":2481.62,"margen":0.6806},{"desc":"TA Tres Leches","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":3636.36,"costo":892.51,"margen":0.7546},{"desc":"TA Cheesecake Ferrero","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":8677.69,"costo":3107.76,"margen":0.6419},{"desc":"TA Tiramisu","rubro":"POSTRES","subrubro":"TAKE AWAY","precio":5537.19,"costo":1380.59,"margen":0.7507},{"desc":"Shell Jamon y Queso","rubro":"SHELL","subrubro":"SHELL","precio":7024.79,"costo":2841.9,"margen":0.5954},{"desc":"Shell Jamon Crudo y Queso","rubro":"SHELL","subrubro":"SHELL","precio":8205.43,"costo":2139.21,"margen":0.7393},{"desc":"Shell Integral","rubro":"SHELL","subrubro":"SHELL","precio":7024.79,"costo":2919.38,"margen":0.5844},{"desc":"Shell Verdura","rubro":"SHELL","subrubro":"SHELL","precio":9208.98,"costo":2516.15,"margen":0.7268},{"desc":"Shell Ensalada Cesar","rubro":"SHELL","subrubro":"SHELL","precio":7713.5,"costo":3264.05,"margen":0.5768},{"desc":"Shell Ensalada Ranchera","rubro":"SHELL","subrubro":"SHELL","precio":7492.83,"costo":3350.67,"margen":0.5528},{"desc":"Shell Cheesecake F.R","rubro":"SHELL","subrubro":"SHELL","precio":3564.05,"costo":1403.47,"margen":0.6062},{"desc":"Shell Ensalada de Frutas","rubro":"SHELL","subrubro":"SHELL","precio":3925.62,"costo":2675.58,"margen":0.3184},{"desc":"Shell Chocotorta","rubro":"SHELL","subrubro":"SHELL","precio":3564.05,"costo":1390.23,"margen":0.6099},{"desc":"Shell Mini Oreo","rubro":"SHELL","subrubro":"SHELL","precio":4648.76,"costo":2077.86,"margen":0.553},{"desc":"Shell Tiramisu","rubro":"SHELL","subrubro":"SHELL","precio":3925.62,"costo":1380.59,"margen":0.6483},{"desc":"Shell Trio de Mousse","rubro":"SHELL","subrubro":"SHELL","precio":3409.09,"costo":1140.08,"margen":0.6656},{"desc":"Shell Tarta de Coco y Dulce de Leche","rubro":"SHELL","subrubro":"SHELL","precio":3512.4,"costo":1021.7,"margen":0.7091},{"desc":"Shell Torta de Naranja","rubro":"SHELL","subrubro":"SHELL","precio":2944.21,"costo":597.27,"margen":0.7971},{"desc":"Shell Tarta de Manzana","rubro":"SHELL","subrubro":"SHELL","precio":3099.17,"costo":1311.86,"margen":0.5767},{"desc":"Shell Alfajor de Maicena","rubro":"SHELL","subrubro":"SHELL","precio":1446.28,"costo":489.92,"margen":0.6613},{"desc":"Shell Frutilla con Crema","rubro":"SHELL","subrubro":"SHELL","precio":4855.37,"costo":2754.46,"margen":0.4327},{"desc":"Shell Pastafrola","rubro":"SHELL","subrubro":"SHELL","precio":2840.5,"costo":635.46,"margen":0.7763},{"desc":"P Cuatro Quesos","rubro":"HORNO","subrubro":"PIZZAS","precio":20743.8,"costo":6270.65,"margen":0.6977},{"desc":"Negroni","rubro":"BEBIDAS","subrubro":"TRAGOS","precio":7933.88,"costo":2747.23,"margen":0.6537},{"desc":"Te de Matcha","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":3305.79,"costo":0,"margen":null},{"desc":"Triple Cajita Verduras y Huevo","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":13057.85,"costo":3481.72,"margen":0.7334},{"desc":"Sabores del Puerto","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":13057.85,"costo":2773.54,"margen":0.7876},{"desc":"Sandwich De Milanesa","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":14876.03,"costo":1921.28,"margen":0.8708},{"desc":"Sandwich De Milanesa Supremo","rubro":"GRILLADOS","subrubro":"SANDWICHES ESPECIAL","precio":17603.31,"costo":2616.62,"margen":0.8514},{"desc":"Torta Porcion Red Velvet","rubro":"POSTRES","subrubro":"TORTAS PORCIONES","precio":5123.97,"costo":1195.25,"margen":0.7667},{"desc":"Torta Porcion Chaja","rubro":"POSTRES","subrubro":"TORTAS PORCIONES","precio":5123.97,"costo":1321.76,"margen":0.742},{"desc":"Torta Porcion Especial","rubro":"POSTRES","subrubro":"TORTAS PORCIONES","precio":5123.97,"costo":1447.09,"margen":0.7176},{"desc":"Torta Porcion Selva Negra","rubro":"POSTRES","subrubro":"TORTAS PORCIONES","precio":7603.31,"costo":1851,"margen":0.7566},{"desc":"Torta Porcion Oreo","rubro":"POSTRES","subrubro":"TORTAS PORCIONES","precio":5785.12,"costo":2057.29,"margen":0.6444},{"desc":"Combo Huevos revueltos","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":10909.09,"costo":1943.43,"margen":0.8219},{"desc":"Ensalada la Huerta","rubro":"ENSALADAS","subrubro":"ENSALADAS","precio":11322.31,"costo":2087.02,"margen":0.8157},{"desc":"Triple Cajita Pollo Especial","rubro":"CAFETERIA","subrubro":"SANDWICHES","precio":13636.36,"costo":4049.73,"margen":0.703},{"desc":"Pastafrola Batata","rubro":"POSTRES","subrubro":"POSTRES ENTEROS","precio":17107.44,"costo":2423.44,"margen":0.8583},{"desc":"Torta Porcion Tres Leches","rubro":"POSTRES","subrubro":"TORTAS PORCIONES","precio":5123.97,"costo":1809.43,"margen":0.6469},{"desc":"Latte Vainilla","rubro":"CAFETERIA","subrubro":"CAFETERIA","precio":5600,"costo":0,"margen":null}]};
@@ -1566,7 +1809,7 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
       { label:'Costo', value: fmtMoneyFull(totCosto) },
       { label:'Utilidad bruta', value: fmtMoneyFull(totUtilBruta), pct: fmtPct(totVentas?totUtilBruta/totVentas:0)+' de ventas' },
       { label:'Promedio mensual (ventas)', value: fmtMoneyFull(totVentas/d.monthly.length) },
-      { label:'Meses relevados', value: d.monthly.length+' (set. parcial)' },
+      { label:'Meses relevados', value: d.monthly.length+' (oct. parcial)' },
     ];
     document.getElementById('kpiRow').innerHTML = cards.map(c=>`
       <div class="kpi-card">
@@ -1713,7 +1956,7 @@ const MENU = {"rubro_stats":[{"rubro":"CUMPLEAÑOS","items":5,"precio_prom":4409
   let hhiKind = 'line';
   let momKind = 'bar';
   let opsDiaKind = 'bar';
-  const DAYS_IN_MONTH = { '2026-01':31, '2026-02':28, '2026-03':31, '2026-04':30, '2026-05':31, '2026-06':30, '2026-07':31, '2026-08':31 };
+  const DAYS_IN_MONTH = { '2026-01':31, '2026-02':28, '2026-03':31, '2026-04':30, '2026-05':31, '2026-06':30, '2026-07':31, '2026-08':31, '2026-09':30, '2026-10':28 };   // octubre parcial: ventas hasta el 28/10 (el reporte es de la madrugada del 29/10)
   let utilEstKind = 'bar';
 
   function renderMedios(){
