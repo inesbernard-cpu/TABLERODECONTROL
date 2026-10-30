@@ -137,7 +137,7 @@
       <span class="ctl-label">Medición</span>
       <div class="seg" role="group" aria-label="Medición">
         <button aria-pressed="false" data-modo="nominal">Valores nominales</button>
-        <button aria-pressed="true" data-modo="real">Ajustado al 31/07/2026</button>
+        <button aria-pressed="true" data-modo="real">Ajustado por inflación</button>
       </div>
     </div>
   </div>
@@ -382,9 +382,13 @@ function serieFlujos(emp, ks, desde, hasta, modo, iCierre){
 }
 
 /* ---------- estado de la vista ---------- */
-const CORTE='2026-07-31';                 // ultimo movimiento alcanzado por el ajuste
-const CORTE_MES='2026-07';                 // indice con el que se reexpresa
-let VIEW={company:'surtidor', modo:'real', desde:'2025-08-01', hasta:'2026-07-31', rendTipo:'bar'};
+const CORTE_MES = IDX_KEYS[IDX_KEYS.length-1];   // indice con el que se reexpresa: el ultimo mes con indice publicado (se actualiza solo al agregar un indice)
+const CORTE = (()=>{ const [y,m]=CORTE_MES.split('-').map(Number); return new Date(Date.UTC(y,m,0)).toISOString().slice(0,10); })();   // ultimo dia de ese mes: ultimo movimiento alcanzado por el ajuste
+const CORTE_TXT = CORTE.split('-').reverse().join('/');
+function finDeMes(k){ const [y,m]=k.split('-').map(Number); return new Date(Date.UTC(y,m,0)).toISOString().slice(0,10).split('-').reverse().join('/'); }   // dd/mm/aaaa del ultimo dia del mes k
+let VIEW={company:'surtidor', modo:'real', desde:'2025-08-01', hasta:CORTE, rendTipo:'bar'};
+document.getElementById('hasta').value = VIEW.hasta;
+document.querySelector('[data-modo="real"]').textContent = 'Ajustado al ' + CORTE_TXT;
 let charts=[];
 function clearCharts(){ charts.forEach(c=>c.destroy()); charts=[]; }
 function mkChart(id,cfg){ const c=new Chart(document.getElementById(id),cfg); charts.push(c); return c; }
@@ -481,11 +485,12 @@ function render(){
   const topado = modo==='real' && hasta>CORTE;
   const hastaEf = topado ? CORTE : hasta;
   if(modo==='real' && desde>CORTE){
-    hero.innerHTML='<div class="empty">El ajuste por inflación llega hasta el 31/07/2026 y el rango elegido empieza después de esa fecha. Elegí un desde anterior o pasá a valores nominales.</div>';
+    hero.innerHTML=`<div class="empty">El ajuste por inflación llega hasta el ${CORTE_TXT} y el rango elegido empieza después de esa fecha. Elegí un desde anterior o pasá a valores nominales.</div>`;
     kpis.innerHTML=''; panels.innerHTML=''; notes.innerHTML=''; document.getElementById('plazosFijos').innerHTML=''; return;
   }
   const ks=meses(desde,hastaEf);
-  const modoTxt = modo==='real' ? 'a moneda de '+fmtMes(CORTE_MES) : 'a valores nominales';
+  const baseMes = mk(hastaEf);   // los importes se reexpresan a la moneda del mes final del rango
+  const modoTxt = modo==='real' ? 'a moneda de '+fmtMes(baseMes) : 'a valores nominales';
 
   if(company==='both'){ renderCompare(ks, modoTxt, hastaEf); }
   else { renderSingle(company, ks, modoTxt, hastaEf); }
@@ -496,14 +501,14 @@ function render(){
   if(modo==='real'){
     const emps = company==='both' ? ['surtidor','estacion'] : [company];
     const post = emps.flatMap(e=>DATA[e].mov.filter(m=>m.fecha>CORTE && m.fecha<=hasta && m.tipo!=='SALDO INICIAL'));
-    aviso = `<div class="note warn"><strong>Ajuste al 31/07/2026.</strong> Solo se actualizan los movimientos concertados hasta esa fecha, y se reexpresan con el índice de ${fmtMes(CORTE_MES)} (${num(indice(CORTE_MES),4)}). `+
+    aviso = `<div class="note warn"><strong>Ajuste al ${CORTE_TXT}.</strong> Solo se actualizan los movimientos concertados hasta esa fecha, y se reexpresan a la moneda del mes final del rango, ${fmtMes(baseMes)} (índice ${num(indice(baseMes),4)}). `+
       (topado
-        ? `El rango elegido llega al ${hasta.split('-').reverse().join('/')}, pero el reporte ajustado corta el 31/07/2026: `+
+        ? `El rango elegido llega al ${hasta.split('-').reverse().join('/')}, pero el reporte ajustado corta el ${CORTE_TXT} (último mes con índice publicado): `+
           (post.length
             ? `${post.length===1?'queda':'quedan'} fuera ${post.length} ${post.length===1?'operación':'operaciones'} por ${money0(post.reduce((a,m)=>a+m.imp,0))}, sin actualizar. `
             : `no hay operaciones posteriores dentro del rango. `)+
           `Para verlas, pasá a valores nominales.`
-        : `Los movimientos posteriores al 31/07/2026 no integran este reporte.`)+
+        : `Los movimientos posteriores al ${CORTE_TXT} (sin índice publicado) no integran este reporte.`)+
       `</div>`;
   }
   notes.innerHTML = aviso + `<div class="note">`+
@@ -543,7 +548,7 @@ function renderSingle(emp, ks, modoTxt, hasta){
   const rend = c.ini>0 ? c.total/c.ini : null;
 
   document.getElementById('hero').innerHTML = heroHTML(c,
-    `Resultado del período — ${NOMBRE[emp]}, ${modo==='real'?'ajustado al 31/07/2026':'a valores nominales'}`,
+    `Resultado del período — ${NOMBRE[emp]}, ${modo==='real'?'ajustado al '+finDeMes(mk(hasta)):'a valores nominales'}`,
     `Del ${desde.split('-').reverse().join('/')} al ${hasta.split('-').reverse().join('/')}. `+
     (modo==='real'
       ? `La inflación acumulada del tramo fue ${pct(infl)}: el resultado ya descuenta esa pérdida de poder adquisitivo.`
@@ -702,7 +707,7 @@ function renderCompare(ks, modoTxt, hasta){
   const infl=indice(ks[ks.length-1])/indice(ks[0])-1;
 
   document.getElementById('hero').innerHTML = `<div class="hero-main">
-      <div class="hero-label">Resultado conjunto del período, ${modo==='real'?'ajustado al 31/07/2026':'a valores nominales'}</div>
+      <div class="hero-label">Resultado conjunto del período, ${modo==='real'?'ajustado al '+finDeMes(mk(hasta)):'a valores nominales'}</div>
       <div class="hero-value tabular ${cls(tot)}">${money0(tot)}</div>
       <div class="hero-note">Del ${desde.split('-').reverse().join('/')} al ${hasta.split('-').reverse().join('/')}. Inflación acumulada del tramo: ${pct(infl)}.</div>
     </div>
